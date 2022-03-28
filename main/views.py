@@ -13,6 +13,32 @@ import datetime, time
 
 today = 1000 * int(time.mktime(datetime.date.today().timetuple()))
 day = 1000 * 60 * 60 * 24
+unit = day // 2 # TODO
+
+
+def get_series_object_item(name):
+    series_object_item = {
+        'name': name,
+        'data': [],
+    }
+    task_objects = Task.objects.all()
+    for task_object in task_objects:
+        task_object_for_series_object_data = {
+            'id': str(task_object.id),
+            'name': '#%s %s' % (task_object.id, task_object.title),
+            'owner': 'Party',
+        }
+
+        task_object_for_series_object_data['start'] = today
+
+        if task_object.cost != 0:
+            task_object_for_series_object_data['end'] = today + unit * task_object.cost
+
+        # if task_object.deadline:
+        #     task_object_for_series_object_data['end'] = 1000 * int(time.mktime(task_object.deadline.timetuple()))
+
+        series_object_item['data'].append(task_object_for_series_object_data)
+    return series_object_item
 
 
 class IndexView(generic.base.TemplateView):
@@ -20,112 +46,9 @@ class IndexView(generic.base.TemplateView):
 
     def get_context_data(self, *args, **kwargs):
         context = {}
-        series_object = [
-            {
-                'name': 'Offices',
-                'data': [
-                    {
-                        'name': 'New offices',
-                        'id': 'new_offices',
-                        'owner': 'Peter'
-                    }, {
-                        'name': 'Prepare office building',
-                        'id': 'prepare_building',
-                        'parent': 'new_offices',
-                        'start': today - (2 * day),
-                        'end': today + (6 * day),
-                        'completed': {
-                            'amount': 0.2
-                        },
-                        'owner': 'Linda'
-                    }, {
-                        'name': 'Inspect building',
-                        'id': 'inspect_building',
-                        'dependency': 'prepare_building',
-                        'parent': 'new_offices',
-                        'start': today + 6 * day,
-                        'end': today + 8 * day,
-                        'owner': 'Ivy'
-                    }, {
-                        'name': 'Passed inspection',
-                        'id': 'passed_inspection',
-                        'dependency': 'inspect_building',
-                        'parent': 'new_offices',
-                        'start': today + 9.5 * day,
-                        'milestone': True,
-                        'owner': 'Peter'
-                    }, {
-                        'name': 'Relocate',
-                        'id': 'relocate',
-                        'dependency': 'passed_inspection',
-                        'parent': 'new_offices',
-                        'owner': 'Josh'
-                    }, {
-                        'name': 'Relocate staff',
-                        'id': 'relocate_staff',
-                        'parent': 'relocate',
-                        'start': today + 10 * day,
-                        'end': today + 11 * day,
-                        'owner': 'Mark'
-                    }, {
-                        'name': 'Relocate test facility',
-                        'dependency': 'relocate_staff',
-                        'parent': 'relocate',
-                        'start': today + 11 * day,
-                        'end': today + 13 * day,
-                        'owner': 'Anne'
-                    }, {
-                        'name': 'Relocate cantina',
-                        'dependency': 'relocate_staff',
-                        'parent': 'relocate',
-                        'start': today + 11 * day,
-                        'end': today + 14 * day
-                    }
-                ]
-            }, {
-                'name': 'Product',
-                'data': [
-                    {
-                        'name': 'New product launch',
-                        'id': 'new_product',
-                        'owner': 'Peter'
-                    }, {
-                        'name': 'Development',
-                        'id': 'development',
-                        'parent': 'new_product',
-                        'start': today - day,
-                        'end': today + (11 * day),
-                        'completed': {
-                            'amount': 0.6,
-                            'fill': '#e80'
-                        },
-                        'owner': 'Susan'
-                    }, {
-                        'name': 'Beta',
-                        'id': 'beta',
-                        'dependency': 'development',
-                        'parent': 'new_product',
-                        'start': today + 12.5 * day,
-                        'milestone': True,
-                        'owner': 'Peter'
-                    }, {
-                        'name': 'Final development',
-                        'id': 'finalize',
-                        'dependency': 'beta',
-                        'parent': 'new_product',
-                        'start': today + 13 * day,
-                        'end': today + 17 * day
-                    }, {
-                        'name': 'Launch',
-                        'dependency': 'finalize',
-                        'parent': 'new_product',
-                        'start': today + 17.5 * day,
-                        'milestone': True,
-                        'owner': 'Peter'
-                    }
-                ]
-            }
-        ]
+        series_object = []
+        series_object.append(get_series_object_item('Project X'))
+        print(series_object)
         context['series'] = json.dumps(series_object)
         return super().get_context_data(**context)
 
