@@ -6,11 +6,18 @@ from .models import *
 # Register your models here.
 
 
+class ProjectAdmin(admin.ModelAdmin):
+    fieldsets = [
+        ('basic', {'fields': ['name']}),
+    ]
+    list_display = ('id', 'name',)
+
+
 class TaskAdmin(admin.ModelAdmin):
     fieldsets = [
-        ('basic', {'fields': ['title', 'description', 'reference', 'priority', 'cost', 'deadline']}),
+        ('basic', {'fields': ['project', 'title', 'description', 'reference', 'priority', 'cost', 'deadline']}),
     ]
-    list_display = ('id', 'title', 'description', 'reference', 'priority', 'cost', 'deadline',)
+    list_display = ('id', 'project', 'title', 'description', 'reference', 'priority', 'cost', 'deadline',)
 
 
 class CalendarAdmin(admin.ModelAdmin):
@@ -20,5 +27,6 @@ class CalendarAdmin(admin.ModelAdmin):
     list_display = ('date', 'is_holiday',)
 
 
+admin.site.register(Project, ProjectAdmin)
 admin.site.register(Task, TaskAdmin)
 admin.site.register(Calendar, CalendarAdmin)

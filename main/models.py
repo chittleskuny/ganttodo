@@ -11,8 +11,20 @@ PRIORITY_CHOICE_TUPLE = ((0, '☆☆☆'), (1, '★☆☆'), (2, '★★☆'), (
 PRIORITY_CHOICE_LIST = ['☆☆☆', '★☆☆', '★★☆', '★★★']
 
 
+class Project(models.Model):
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=255, default=None, blank=False, null=False)
+
+    def get_absolute_url(self):
+        return reverse('main:project_detail', kwargs={'pk':self.pk})
+
+    def __str__(self):
+        return self.name
+
+
 class Task(models.Model):
     id = models.AutoField(primary_key=True)
+    project = models.ForeignKey(Project, default=None, blank=True, null=True, on_delete=models.CASCADE)
     title = models.CharField(max_length=255, default=None, blank=False, null=False)
     description = models.TextField(max_length=65535, default=None, blank=False, null=True)
     reference = models.CharField(max_length=255, default=None, blank=True, null=True)

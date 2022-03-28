@@ -7,3 +7,65 @@ p {
     font-family: 'Microsoft YaHei';
     font-size: medium;
 }
+
+ul {
+    clear: both;
+}
+
+li {
+    list-style-type: none;
+}
+
+form {
+    clear: both;
+}
+
+.pagination {
+    clear: both;
+}
+
+.navi_item {
+    float: left;
+    width: 25%;
+    background-color: #293150;
+}
+
+.navi_item_text {
+    color: #A1AFC9;
+    font-size: medium;
+    font-family: 'Microsoft YaHei';
+    font-weight: bold;
+    letter-spacing: 5px;
+    text-align: center;
+}
+
+.toolbar_item {
+    float: left;
+    margin: 5px 10px 5px 0px;
+}
+
+.queryset_list {
+    clear: both;
+}
+
+.no_items {
+    clear: both;
+    font-size: medium;
+}
+
+.detail {
+    clear: both;
+}
+
+.submit {
+    margin-top: 5px;
+}
+
+#toolbar {
+    clear: both;
+    margin: 5px 0px 5px 0px;
+}
+
+#ganttchart {
+    clear: both;
+}

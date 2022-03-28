@@ -2,7 +2,7 @@
 {% block body %}
 <script src="https://code.highcharts.com/gantt/highcharts-gantt.js"></script>
 <script src="https://code.highcharts.com/gantt/modules/exporting.js"></script>
-<div id="container"></div>
+<div id="ganttchart"></div>
 <script>
 
     // Utility functions
@@ -22,7 +22,7 @@
 
     var seriesObject = JSON.parse('{{ series }}'.replaceAll('&quot;', '"'))
 
-    Highcharts.ganttChart('container', {
+    Highcharts.ganttChart('ganttchart', {
         series: seriesObject,
         tooltip: {
             pointFormatter: function () {
@@ -76,8 +76,8 @@
         },
         xAxis: {
             currentDateIndicator: true,
-            min: today - 3 * day,
-            max: today + 18 * day
+            min: today - 7 * day,
+            max: today + 30 * day
         }
     })
 </script>

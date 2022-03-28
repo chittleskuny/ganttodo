@@ -1,0 +1,15 @@
+{% extends "main/base.html" %}
+{% block body %}
+    <div id="toolbar">
+        <div class="toolbar_item">
+            <a href="{{ project.pk }}/delete"><button>Delete</button></a>
+        </div>
+        <div class="toolbar_item">
+            <a href="{{ project.pk }}/update"><button>Update</button></a>
+        </div>
+    </div>
+    <div class="detail">
+        <p>Id: {{ project.id }}</p>
+        <p>Name: {{ project.name }}</p>
+    </div>
+{% endblock %}

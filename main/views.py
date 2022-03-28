@@ -16,29 +16,39 @@ day = 1000 * 60 * 60 * 24
 unit = day // 2 # TODO
 
 
-def get_series_object_item(name):
-    series_object_item = {
-        'name': name,
-        'data': [],
-    }
-    task_objects = Task.objects.all()
-    for task_object in task_objects:
-        task_object_for_series_object_data = {
-            'id': str(task_object.id),
-            'name': '#%s %s' % (task_object.id, task_object.title),
-            'owner': 'Party',
+def get_series_object():
+    series_object = []
+
+    project_objects = Project.objects.all()
+    for project_object in project_objects:
+        series_project_object = {
+            'name': project_object.name,
+            'data': [],
         }
 
-        task_object_for_series_object_data['start'] = today
+        task_objects = Task.objects.order_by('-priority')
 
-        if task_object.cost != 0:
-            task_object_for_series_object_data['end'] = today + unit * task_object.cost
+        curday = today
+        for task_object in task_objects:
+            series_project_task_object = {
+                'id': str(task_object.id),
+                'name': '#%s %s' % (task_object.id, task_object.title),
+            }
 
-        # if task_object.deadline:
-        #     task_object_for_series_object_data['end'] = 1000 * int(time.mktime(task_object.deadline.timetuple()))
+            series_project_task_object['start'] = curday
 
-        series_object_item['data'].append(task_object_for_series_object_data)
-    return series_object_item
+            if task_object.cost != 0:
+                curday = curday + unit * task_object.cost
+                series_project_task_object['end'] = curday
+
+            # if task_object.deadline:
+            #     series_project_task_object['end'] = 1000 * int(time.mktime(task_object.deadline.timetuple()))
+
+            series_project_object['data'].append(series_project_task_object)
+
+        series_object.append(series_project_object)
+    
+    return series_object
 
 
 class IndexView(generic.base.TemplateView):
@@ -46,11 +56,40 @@ class IndexView(generic.base.TemplateView):
 
     def get_context_data(self, *args, **kwargs):
         context = {}
-        series_object = []
-        series_object.append(get_series_object_item('Project X'))
-        print(series_object)
+        series_object = get_series_object()
         context['series'] = json.dumps(series_object)
         return super().get_context_data(**context)
+
+
+class ProjectListView(generic.ListView):
+    model = Project
+    context_object_name = 'queryset_list'
+
+    def get_queryset(self):
+        return Project.objects.order_by('id')
+
+
+class ProjectDetailView(generic.DetailView):
+    model = Project
+    context_object_name = 'project'
+
+
+class ProjectCreateView(generic.CreateView):
+    model = Project
+    fields = ['name']
+    template_name = 'main/create.html'
+
+
+class ProjectUpdateView(generic.UpdateView):
+    model = Project
+    fields = ['name']
+    template_name = 'main/update.html'
+
+
+class ProjectDeleteView(generic.DeleteView):
+    model = Project
+    template_name = 'main/confirm_delete.html'
+    success_url = reverse_lazy('main:project_list')
 
 
 class TaskListView(generic.ListView):
@@ -68,13 +107,13 @@ class TaskDetailView(generic.DetailView):
 
 class TaskCreateView(generic.CreateView):
     model = Task
-    fields = ['title', 'description', 'reference', 'priority', 'cost', 'deadline']
+    fields = ['project', 'title', 'description', 'reference', 'priority', 'cost', 'deadline']
     template_name = 'main/create.html'
 
 
 class TaskUpdateView(generic.UpdateView):
     model = Task
-    fields = ['title', 'description', 'reference', 'priority', 'cost', 'deadline']
+    fields = ['project', 'title', 'description', 'reference', 'priority', 'cost', 'deadline']
     template_name = 'main/update.html'
 
 
