@@ -1,0 +1,15 @@
+{% extends "main/base.html" %}
+{% block body %}
+    <div id="toolbar">
+        <div class="toolbar_item">
+            <a href="{{ calendar.date_yyyy_mm_dd }}/delete"><button>Delete</button></a>
+        </div>
+        <div class="toolbar_item">
+            <a href="{{ calendar.date_yyyy_mm_dd }}/update"><button>Update</button></a>
+        </div>
+    </div>
+    <div class="detail">
+        <p>Date: {{ calendar.date }}</p>
+        <p>Is holiday: {{ calendar.is_holiday }}</p>
+    </div>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "main/base.html" %}　
+{% block body %}
+    <form method="post">{% csrf_token %}
+        {% for field in form %}
+            <div class="fieldWrapper">
+                {{ field.errors }}
+                {{ field.label_tag }}{{ field }}
+                {% if field.help_text %}
+                <p class="help">{{ field.help_text|safe }}</p>
+                {% endif %}
+            </div>
+        {% endfor %}
+            <input class="btn btn-default" type="submit" value="Create" />
+    </form>
+{% endblock %}
