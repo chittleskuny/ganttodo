@@ -3,7 +3,9 @@ from django.urls import reverse
 
 import time
 
+
 # Create your models here.
+
 
 PRIORITY_CHOICE_TUPLE = ((0, '☆☆☆'), (1, '★☆☆'), (2, '★★☆'), (3, '★★★'))
 PRIORITY_CHOICE_LIST = ['☆☆☆', '★☆☆', '★★☆', '★★★']
