@@ -34,7 +34,6 @@
 
             for (i = 0; i < pre_tasks.children.length - 1; i++) {
                 var pre_task_item = pre_tasks.children[i]
-                console.log(pre_task_item.children)
                 var e = pre_task_item.children[1]
                 var e_old_name = e.getAttribute("name")
                 var e_new_name = e_old_name.replace(/pre_task_[0-9]+/, "pre_task_".concat(i))
@@ -74,6 +73,9 @@
             <div>Cost:
                 <input type="text" name="cost" value="{{ task.cost|default:'' }}">
             </div>
+            <div>Start:
+                <input type="text" name="start" value="{{ task.start|default:'' }}">
+            </div>
             <div>Deadline:
                 <input type="text" name="deadline" value="{{ task.deadline|default:'' }}">
             </div>
@@ -81,7 +83,7 @@
                 <input type="text" name="assignee" value="{{ task.assignee|default:'' }}">
             </div>
             <div>Status:
-                <input type="text" name="status" value="{{ task.status|default:'' }}">
+                <input type="text" name="status" value="{{ task.status|default:0 }}">
             </div>
             <div>Pre tasks:
                 {% if task.pre_tasks %}

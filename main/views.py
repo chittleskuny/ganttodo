@@ -198,6 +198,7 @@ def task_create_or_update_submit(request):
     reference = request.POST.get('reference').strip()
     priority = request.POST.get('priority').strip()
     cost = request.POST.get('cost').strip()
+    start = request.POST.get('start').strip()
     deadline = request.POST.get('deadline').strip()
     assignee = request.POST.get('assignee').strip()
     status = request.POST.get('status').strip()
@@ -222,6 +223,7 @@ def task_create_or_update_submit(request):
 
     cost = 0 if cost == '' else int(cost)
 
+    start = None if start == '' else start
     deadline = None if deadline == '' else deadline
 
     if assignee == '':
@@ -241,6 +243,7 @@ def task_create_or_update_submit(request):
             reference = reference,
             priority = priority,
             cost = cost,
+            start = start,
             deadline = deadline,
             assignee = assignee,
             status = status,
@@ -252,6 +255,7 @@ def task_create_or_update_submit(request):
         task_object.reference = reference
         task_object.priority = priority
         task_object.cost = cost
+        task_object.start = start
         task_object.deadline = deadline
         task_object.assignee = assignee
         task_object.status = status

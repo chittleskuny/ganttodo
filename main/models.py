@@ -41,8 +41,15 @@ class Task(models.Model):
     reference = models.CharField(max_length=255, default=None, blank=True, null=True)
     priority = models.IntegerField(default=0, blank=False, null=False, choices=PRIORITY_CHOICE_TUPLE)
     cost = models.IntegerField(default=0, blank=False, null=False)
+    start = models.DateField(default=None, blank=True, null=True)
     deadline = models.DateField(default=None, blank=True, null=True)
     assignee = models.ForeignKey(User, default=None, blank=True, null=True, on_delete=models.CASCADE)
+
+    # status:
+    # 0 not started
+    # 1 doing
+    # 2 aborted
+    # 3 done
     status = models.IntegerField(default=0, blank=False, null=False)
 
     def get_absolute_url(self):
