@@ -27,6 +27,13 @@ class TaskAdmin(admin.ModelAdmin):
     list_display = ('id', 'project', 'title', 'description', 'reference', 'priority', 'cost', 'deadline', 'assignee', 'status',)
 
 
+class TaskPositionAdmin(admin.ModelAdmin):
+    fieldsets = [
+        ('basic', {'fields': ['pre', 'post']}),
+    ]
+    list_display = ('id', 'pre', 'post',)
+
+
 class CalendarAdmin(admin.ModelAdmin):
     fieldsets = [
         ('basic', {'fields': ['date', 'is_holiday']}),
@@ -37,4 +44,5 @@ class CalendarAdmin(admin.ModelAdmin):
 admin.site.register(User, UserAdmin)
 admin.site.register(Project, ProjectAdmin)
 admin.site.register(Task, TaskAdmin)
+admin.site.register(TaskPosition, TaskPositionAdmin)
 admin.site.register(Calendar, CalendarAdmin)

@@ -52,6 +52,18 @@ class Task(models.Model):
         return self.title
 
 
+class TaskPosition(models.Model):
+    id = models.AutoField(primary_key=True)
+    pre = models.ForeignKey(Task, related_name='pre_task', default=None, blank=False, null=False, on_delete=models.CASCADE)
+    post = models.ForeignKey(Task, related_name='post_task', default=None, blank=False, null=False, on_delete=models.CASCADE)
+
+    def get_absolute_url(self):
+        return reverse('main:taskposition_detail', kwargs={'pk':self.pk})
+
+    def __str__(self):
+        return '%s -> %s' % (self.pre, self.post)
+
+
 class Calendar(models.Model):
     date = models.DateField(primary_key=True)
     is_holiday = models.BooleanField(default=False, blank=False, null=False)

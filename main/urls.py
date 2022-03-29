@@ -25,6 +25,12 @@ urlpatterns = [
     path('task/<int:pk>/update', views.TaskUpdateView.as_view(), name='task_update'),
     path('task/<int:pk>/delete', views.TaskDeleteView.as_view(), name='task_delete'),
 
+    path('taskposition/list', views.TaskPositionListView.as_view(), name='taskposition_list'),
+    path('taskposition/create', views.TaskPositionCreateView.as_view(), name='taskposition_create'),
+    path('taskposition/<int:pk>', views.TaskPositionDetailView.as_view(), name='taskposition_detail'),
+    path('taskposition/<int:pk>/update', views.TaskPositionUpdateView.as_view(), name='taskposition_update'),
+    path('taskposition/<int:pk>/delete', views.TaskPositionDeleteView.as_view(), name='taskposition_delete'),
+
     path('calendar/list', views.CalendarListView.as_view(), name='calendar_list'),
     path('calendar/create', views.CalendarCreateView.as_view(), name='calendar_create'),
     path('calendar/<str:pk>', views.CalendarDetailView.as_view(), name='calendar_detail'),

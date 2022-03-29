@@ -16,6 +16,27 @@ day = 1000 * 60 * 60 * 24
 unit = day // 2 # TODO
 
 
+def get_last_task_object(task_objects, taskposition_objects):
+    for task_object in task_objects:
+        for taskposition_object in taskposition_objects:
+            if task_object == taskposition_object.pre:
+                break
+        else:
+            return task_object
+    else:
+        return None
+
+
+def remove_task_object_from_taskposition_objects(task_object, taskposition_objects):
+    to_remove = []
+    for taskposition_object in taskposition_objects:
+        if task_object == taskposition_object.pre or task_object == taskposition_object.post:
+            to_remove.append(taskposition_object)
+    for taskposition_object in to_remove:
+        taskposition_objects.remove(taskposition_object)
+    return taskposition_objects
+
+
 def get_series_object():
     user_curday = {'nobody': today}
     user_objects = User.objects.all()
@@ -30,8 +51,17 @@ def get_series_object():
             'data': [],
         }
 
-    task_objects = Task.objects.filter(status=0).order_by('-priority')
-    for task_object in task_objects:
+    task_objects_toposorted_list = []
+    task_objects = list(Task.objects.filter(status=0).order_by('priority'))
+    taskposition_objects = list(TaskPosition.objects.all())
+    while task_objects:
+        last_task_object = get_last_task_object(task_objects, taskposition_objects)
+        task_objects_toposorted_list.append(last_task_object)
+        task_objects.remove(last_task_object)
+        taskposition_objects = remove_task_object_from_taskposition_objects(last_task_object, taskposition_objects)
+    task_objects_toposorted_list.reverse()
+
+    for task_object in task_objects_toposorted_list:
         series_project_task_object = {
             'id': str(task_object.id),
             'name': '#%s %s' % (task_object.id, task_object.title),
@@ -157,6 +187,37 @@ class TaskDeleteView(generic.DeleteView):
     model = Task
     template_name = 'main/confirm_delete.html'
     success_url = reverse_lazy('main:task_list')
+
+
+class TaskPositionListView(generic.ListView):
+    model = TaskPosition
+    context_object_name = 'queryset_list'
+
+    def get_queryset(self):
+        return TaskPosition.objects.order_by('id')
+
+
+class TaskPositionDetailView(generic.DetailView):
+    model = TaskPosition
+    context_object_name = 'taskposition'
+
+
+class TaskPositionCreateView(generic.CreateView):
+    model = TaskPosition
+    fields = ['pre', 'post']
+    template_name = 'main/create.html'
+
+
+class TaskPositionUpdateView(generic.UpdateView):
+    model = TaskPosition
+    fields = ['pre', 'post']
+    template_name = 'main/update.html'
+
+
+class TaskPositionDeleteView(generic.DeleteView):
+    model = TaskPosition
+    template_name = 'main/confirm_delete.html'
+    success_url = reverse_lazy('main:taskposition_list')
 
 
 class CalendarListView(generic.ListView):
