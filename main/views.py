@@ -5,87 +5,12 @@ from django.urls import reverse, reverse_lazy
 from django.views import generic
 
 from .models import *
+from .series import *
 
 import json
-import datetime, time
 
 
 # Create your views here.
-
-
-today = 1000 * int(time.mktime(datetime.date.today().timetuple()))
-day = 1000 * 60 * 60 * 24
-unit = day // 2 # TODO
-
-
-def get_last_task_object(task_objects, taskposition_objects):
-    for task_object in task_objects:
-        for taskposition_object in taskposition_objects:
-            if task_object == taskposition_object.pre:
-                break
-        else:
-            return task_object
-    else:
-        return None
-
-
-def remove_task_object_from_taskposition_objects(task_object, taskposition_objects):
-    to_remove = []
-    for taskposition_object in taskposition_objects:
-        if task_object == taskposition_object.pre or task_object == taskposition_object.post:
-            to_remove.append(taskposition_object)
-    for taskposition_object in to_remove:
-        taskposition_objects.remove(taskposition_object)
-    return taskposition_objects
-
-
-def get_series_object():
-    user_curday = {'nobody': today}
-    user_objects = User.objects.all()
-    for user_object in user_objects:
-        user_curday[user_object.name] = today
-
-    series_object_dict = {}
-    project_objects = Project.objects.all()
-    for project_object in project_objects:
-        series_object_dict[project_object.name] = {
-            'name': project_object.name,
-            'data': [],
-        }
-
-    task_objects_toposorted_list = []
-    task_objects = list(Task.objects.filter(status=0).order_by('priority'))
-    taskposition_objects = list(TaskPosition.objects.all())
-    while task_objects:
-        last_task_object = get_last_task_object(task_objects, taskposition_objects)
-        task_objects_toposorted_list.append(last_task_object)
-        task_objects.remove(last_task_object)
-        taskposition_objects = remove_task_object_from_taskposition_objects(last_task_object, taskposition_objects)
-    task_objects_toposorted_list.reverse()
-
-    for task_object in task_objects_toposorted_list:
-        series_project_task_object = {
-            'id': str(task_object.id),
-            'name': str(task_object),
-        }
-
-        username = 'nobody'
-        if task_object.assignee is not None:
-            username = task_object.assignee.name
-            series_project_task_object['owner'] = username
-
-        series_project_task_object['start'] = user_curday[username]
-        if task_object.cost != 0:
-            user_curday[username] = user_curday[username] + unit * task_object.cost
-            series_project_task_object['end'] = user_curday[username]
-        
-        if task_object.project is not None:
-            series_object_dict[task_object.project.name]['data'].append(series_project_task_object)
-
-    series_object_list = []
-    for key, value in series_object_dict.items():
-        series_object_list.append(value)
-    return series_object_list
 
 
 class IndexView(generic.base.TemplateView):
@@ -186,7 +111,7 @@ def task_update(request, pk):
     taskposition_objects = TaskPosition.objects.filter(post=task_object)
     for taskposition_object in taskposition_objects:
         task_object.pre_tasks.append(taskposition_object.pre)
-    other_task_objects = Task.objects.filter(~Q(project=task_object.project)).order_by('id')
+    other_task_objects = Task.objects.filter(project=task_object.project).order_by('id')
     return render(request, 'main/task_create_or_update.html', {'task':task_object, 'projects':project_objects, 'other_tasks': other_task_objects})
 
 

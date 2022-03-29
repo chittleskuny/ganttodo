@@ -1,14 +1,15 @@
 from django.db import models
 from django.urls import reverse
 
-import time
-
 
 # Create your models here.
 
 
 PRIORITY_CHOICE_TUPLE = ((0, '☆☆☆'), (1, '★☆☆'), (2, '★★☆'), (3, '★★★'))
 PRIORITY_CHOICE_LIST = ['☆☆☆', '★☆☆', '★★☆', '★★★']
+
+STATUS_CHOICE_TUPLE = ((0, 'todo'), (1, 'doing'), (2, 'done'), (4, 'aborted'))
+STATUS_CHOICE_LIST = ['todo', 'doing', 'done', 'aborted']
 
 
 class User(models.Model):
@@ -44,16 +45,16 @@ class Task(models.Model):
     start = models.DateField(default=None, blank=True, null=True)
     deadline = models.DateField(default=None, blank=True, null=True)
     assignee = models.ForeignKey(User, default=None, blank=True, null=True, on_delete=models.CASCADE)
-
-    # status:
-    # 0 not started
-    # 1 doing
-    # 2 aborted
-    # 3 done
-    status = models.IntegerField(default=0, blank=False, null=False)
+    status = models.IntegerField(default=0, blank=False, null=False, choices=STATUS_CHOICE_TUPLE)
 
     def get_absolute_url(self):
         return reverse('main:task_detail', kwargs={'pk':self.pk})
+
+    def start_yyyy_mm_dd(self):
+        return '' if self.start is None else str(self.start)
+
+    def deadline_yyyy_mm_dd(self):
+        return '' if self.deadline is None else str(self.deadline)
 
     def __str__(self):
         return '#%d %s' % (self.id, self.title)

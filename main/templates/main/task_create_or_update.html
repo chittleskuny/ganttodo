@@ -74,10 +74,10 @@
                 <input type="text" name="cost" value="{{ task.cost|default:'' }}">
             </div>
             <div>Start:
-                <input type="text" name="start" value="{{ task.start|default:'' }}">
+                <input type="text" name="start" value="{{ task.start_yyyy_mm_dd|default:'' }}">
             </div>
             <div>Deadline:
-                <input type="text" name="deadline" value="{{ task.deadline|default:'' }}">
+                <input type="text" name="deadline" value="{{ task.deadline_yyyy_mm_dd|default:'' }}">
             </div>
             <div>Assignee:
                 <input type="text" name="assignee" value="{{ task.assignee|default:'' }}">
