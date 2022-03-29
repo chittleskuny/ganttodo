@@ -1,0 +1,36 @@
+{% extends "main/base.html" %}
+{% block body %}
+    <div id="toolbar">
+        <div class="toolbar_item">
+            <a href="create"><button>Create</button></a>
+        </div>
+    </div>
+    {% if queryset_list %}
+        <div class="queryset_list">
+            <ul>
+                {% for user in queryset_list %}
+                    <li><a href="{{ user.get_absolute_url }}">{{ user }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="pagination">
+            <span class="step-links">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1">&laquo; 1</a>
+                {% endif %}
+                {% if page_obj.has_previous and page_obj.previous_page_number != 1 %}
+                    <a href="?page={{ page_obj.previous_page_number }}">&lsaquo; {{ page_obj.previous_page_number }}</a>
+                {% endif %}
+                    <span class="current">{{ page_obj.number }}</span>
+                {% if page_obj.has_next and page_obj.next_page_number != page_obj.paginator.num_pages %}
+                    <a href="?page={{ page_obj.next_page_number }}">{{ page_obj.next_page_number }} &rsaquo;</a>
+                {% endif %}
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.paginator.num_pages }}">{{ page_obj.paginator.num_pages }} &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
+    {% else %}
+        <div class="no_items"><p>No items.</p></div>
+    {% endif %}
+{% endblock %}

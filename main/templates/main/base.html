@@ -10,6 +10,7 @@
     {% block header %}
         <div>
             <div class="navi_item"><a href="{% url 'main:index' %}"><p class="navi_item_text">Home</p></a></div>
+            <div class="navi_item"><a href="{% url 'main:user_list' %}"><p class="navi_item_text">Users</p></a></div>
             <div class="navi_item"><a href="{% url 'main:project_list' %}"><p class="navi_item_text">Projects</p></a></div>
             <div class="navi_item"><a href="{% url 'main:task_list' %}"><p class="navi_item_text">Tasks</p></a></div>
             <div class="navi_item"><a href="{% url 'main:calendar_list' %}"><p class="navi_item_text">Calendars</p></a></div>

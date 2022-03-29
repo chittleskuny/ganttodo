@@ -7,6 +7,12 @@ app_name = 'main'
 urlpatterns = [
     path('', views.IndexView.as_view(), name='index'),
     
+    path('user/list', views.UserListView.as_view(), name='user_list'),
+    path('user/create', views.UserCreateView.as_view(), name='user_create'),
+    path('user/<int:pk>', views.UserDetailView.as_view(), name='user_detail'),
+    path('user/<int:pk>/update', views.UserUpdateView.as_view(), name='user_update'),
+    path('user/<int:pk>/delete', views.UserDeleteView.as_view(), name='user_delete'),
+
     path('project/list', views.ProjectListView.as_view(), name='project_list'),
     path('project/create', views.ProjectCreateView.as_view(), name='project_create'),
     path('project/<int:pk>', views.ProjectDetailView.as_view(), name='project_detail'),

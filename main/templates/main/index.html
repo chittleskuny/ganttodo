@@ -10,7 +10,9 @@
     var defined = Highcharts.defined
     var isObject = Highcharts.isObject
 
+
     // Set to 00:00:00:000 today
+    Highcharts.setOptions({global: {useUTC: false}})
     var today = new Date()
     today.setUTCHours(0)
     today.setUTCMinutes(0)
@@ -21,6 +23,7 @@
     var day = 1000 * 60 * 60 * 24
 
     var seriesObject = JSON.parse('{{ series }}'.replaceAll('&quot;', '"'))
+    console.debug(seriesObject)
 
     Highcharts.ganttChart('ganttchart', {
         series: seriesObject,

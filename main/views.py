@@ -17,38 +17,43 @@ unit = day // 2 # TODO
 
 
 def get_series_object():
-    series_object = []
+    user_curday = {'nobody': today}
+    user_objects = User.objects.all()
+    for user_object in user_objects:
+        user_curday[user_object.name] = today
 
+    series_object_dict = {}
     project_objects = Project.objects.all()
     for project_object in project_objects:
-        series_project_object = {
+        series_object_dict[project_object.name] = {
             'name': project_object.name,
             'data': [],
         }
 
-        task_objects = Task.objects.order_by('-priority')
+    task_objects = Task.objects.filter(status=0).order_by('-priority')
+    for task_object in task_objects:
+        series_project_task_object = {
+            'id': str(task_object.id),
+            'name': '#%s %s' % (task_object.id, task_object.title),
+        }
 
-        curday = today
-        for task_object in task_objects:
-            series_project_task_object = {
-                'id': str(task_object.id),
-                'name': '#%s %s' % (task_object.id, task_object.title),
-            }
+        username = 'nobody'
+        if task_object.assignee is not None:
+            username = task_object.assignee.name
+            series_project_task_object['owner'] = username
 
-            series_project_task_object['start'] = curday
+        series_project_task_object['start'] = user_curday[username]
+        if task_object.cost != 0:
+            user_curday[username] = user_curday[username] + unit * task_object.cost
+            series_project_task_object['end'] = user_curday[username]
+        
+        if task_object.project is not None:
+            series_object_dict[task_object.project.name]['data'].append(series_project_task_object)
 
-            if task_object.cost != 0:
-                curday = curday + unit * task_object.cost
-                series_project_task_object['end'] = curday
-
-            # if task_object.deadline:
-            #     series_project_task_object['end'] = 1000 * int(time.mktime(task_object.deadline.timetuple()))
-
-            series_project_object['data'].append(series_project_task_object)
-
-        series_object.append(series_project_object)
-    
-    return series_object
+    series_object_list = []
+    for key, value in series_object_dict.items():
+        series_object_list.append(value)
+    return series_object_list
 
 
 class IndexView(generic.base.TemplateView):
@@ -59,6 +64,37 @@ class IndexView(generic.base.TemplateView):
         series_object = get_series_object()
         context['series'] = json.dumps(series_object)
         return super().get_context_data(**context)
+
+
+class UserListView(generic.ListView):
+    model = User
+    context_object_name = 'queryset_list'
+
+    def get_queryset(self):
+        return User.objects.order_by('id')
+
+
+class UserDetailView(generic.DetailView):
+    model = User
+    context_object_name = 'user'
+
+
+class UserCreateView(generic.CreateView):
+    model = User
+    fields = ['name']
+    template_name = 'main/create.html'
+
+
+class UserUpdateView(generic.UpdateView):
+    model = User
+    fields = ['name']
+    template_name = 'main/update.html'
+
+
+class UserDeleteView(generic.DeleteView):
+    model = User
+    template_name = 'main/confirm_delete.html'
+    success_url = reverse_lazy('main:user_list')
 
 
 class ProjectListView(generic.ListView):
@@ -107,13 +143,13 @@ class TaskDetailView(generic.DetailView):
 
 class TaskCreateView(generic.CreateView):
     model = Task
-    fields = ['project', 'title', 'description', 'reference', 'priority', 'cost', 'deadline']
+    fields = ['project', 'title', 'description', 'reference', 'priority', 'cost', 'deadline', 'assignee', 'status']
     template_name = 'main/create.html'
 
 
 class TaskUpdateView(generic.UpdateView):
     model = Task
-    fields = ['project', 'title', 'description', 'reference', 'priority', 'cost', 'deadline']
+    fields = ['project', 'title', 'description', 'reference', 'priority', 'cost', 'deadline', 'assignee', 'status']
     template_name = 'main/update.html'
 
 
