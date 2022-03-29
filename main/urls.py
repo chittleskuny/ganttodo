@@ -20,9 +20,10 @@ urlpatterns = [
     path('project/<int:pk>/delete', views.ProjectDeleteView.as_view(), name='project_delete'),
 
     path('task/list', views.TaskListView.as_view(), name='task_list'),
-    path('task/create', views.TaskCreateView.as_view(), name='task_create'),
+    path('task/create', views.task_create, name='task_create'),
+    path('task/create/or/update/submit', views.task_create_or_update_submit, name='task_create_or_update_submit'),
     path('task/<int:pk>', views.TaskDetailView.as_view(), name='task_detail'),
-    path('task/<int:pk>/update', views.TaskUpdateView.as_view(), name='task_update'),
+    path('task/<int:pk>/update', views.task_update, name='task_update'),
     path('task/<int:pk>/delete', views.TaskDeleteView.as_view(), name='task_delete'),
 
     path('taskposition/list', views.TaskPositionListView.as_view(), name='taskposition_list'),

@@ -1,3 +1,5 @@
+from django.db.models import Q
+from django.http import Http404, HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse, reverse_lazy
 from django.views import generic
@@ -64,7 +66,7 @@ def get_series_object():
     for task_object in task_objects_toposorted_list:
         series_project_task_object = {
             'id': str(task_object.id),
-            'name': '#%s %s' % (task_object.id, task_object.title),
+            'name': str(task_object),
         }
 
         username = 'nobody'
@@ -171,16 +173,107 @@ class TaskDetailView(generic.DetailView):
     context_object_name = 'task'
 
 
-class TaskCreateView(generic.CreateView):
-    model = Task
-    fields = ['project', 'title', 'description', 'reference', 'priority', 'cost', 'deadline', 'assignee', 'status']
-    template_name = 'main/create.html'
+def task_create(request):
+    project_objects = Project.objects.order_by('name')
+    other_task_objects = Task.objects.order_by('id')
+    return render(request, 'main/task_create_or_update.html', {'projects':project_objects, 'other_tasks': other_task_objects})
 
 
-class TaskUpdateView(generic.UpdateView):
-    model = Task
-    fields = ['project', 'title', 'description', 'reference', 'priority', 'cost', 'deadline', 'assignee', 'status']
-    template_name = 'main/update.html'
+def task_update(request, pk):
+    task_object = Task.objects.get(pk=pk)
+    project_objects = Project.objects.order_by('name')
+    task_object.pre_tasks = []
+    taskposition_objects = TaskPosition.objects.filter(post=task_object)
+    for taskposition_object in taskposition_objects:
+        task_object.pre_tasks.append(taskposition_object.pre)
+    other_task_objects = Task.objects.filter(~Q(project=task_object.project)).order_by('id')
+    return render(request, 'main/task_create_or_update.html', {'task':task_object, 'projects':project_objects, 'other_tasks': other_task_objects})
+
+
+def task_create_or_update_submit(request):
+    id = request.POST.get('id').strip()
+    project = request.POST.get('project').strip()
+    title = request.POST.get('title').strip()
+    description = request.POST.get('description').strip()
+    reference = request.POST.get('reference').strip()
+    priority = request.POST.get('priority').strip()
+    cost = request.POST.get('cost').strip()
+    deadline = request.POST.get('deadline').strip()
+    assignee = request.POST.get('assignee').strip()
+    status = request.POST.get('status').strip()
+    
+    if id == '':
+        id = 0
+    else:
+        id = int(id)
+
+    if project == '':
+        project = None
+    else:
+        project = Project.objects.get(name=project)
+
+    # title
+    
+    # description
+    
+    reference = None if reference == '' else reference
+
+    priority = 0 if priority == '' else int(priority)
+
+    cost = 0 if cost == '' else int(cost)
+
+    deadline = None if deadline == '' else deadline
+
+    if assignee == '':
+        assignee = None
+    else:
+        assignee = User.objects.get(name=assignee)
+
+    status = 0 if status == '' else int(status)
+
+    try:
+        task_object = Task.objects.get(pk=id)
+    except Task.DoesNotExist:
+        task_object = Task(
+            project = project,
+            title = title,
+            description = description,
+            reference = reference,
+            priority = priority,
+            cost = cost,
+            deadline = deadline,
+            assignee = assignee,
+            status = status,
+        )
+    else:
+        task_object.project = project
+        task_object.title = title
+        task_object.description = description
+        task_object.reference = reference
+        task_object.priority = priority
+        task_object.cost = cost
+        task_object.deadline = deadline
+        task_object.assignee = assignee
+        task_object.status = status
+    task_object.save()
+
+    i = 1
+    while request.POST.get('pre_task_%d' % i):
+        pre_task = request.POST.get('pre_task_%d' % i).strip()
+        first_space_index = pre_task.find(' ')
+        pre_task_id = int(pre_task[1:first_space_index])
+        pre_task_object = Task.objects.get(pk=pre_task_id)
+        try:
+            taskposition_object = TaskPosition.objects.get(pre=pre_task_object, post=task_object)
+        except TaskPosition.DoesNotExist:
+            taskposition_object = TaskPosition(
+                pre = pre_task_object,
+                post = task_object,
+            )
+            taskposition_object.save()
+        i = i + 1
+
+    return HttpResponseRedirect(reverse('main:task_detail', args=(task_object.pk,)))
 
 
 class TaskDeleteView(generic.DeleteView):

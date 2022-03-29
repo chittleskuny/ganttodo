@@ -1,0 +1,108 @@
+{% extends "main/base.html" %}
+{% block body %}
+    {% load static %}
+    <script>
+        function new_pre_task(pre_task_number) {
+            var pre_task = document.createElement("div")
+            pre_task.innerHTML = (function () {/*
+                <button type='button' onclick="remove_pre_task(this)">Remove</button>
+                <select>
+                    {% for other_task in other_tasks %}
+                        {% if task == other_task %}
+                            <option value="{{ other_task }}" selected="selected">{{ other_task }}</option>
+                        {% else %}
+                            <option value="{{ other_task }}">{{ other_task }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            */}).toString().split("/*")[1].split("*/")[0]
+            pre_task.setAttribute("class", "pre_task_item")
+            pre_task.children[1].setAttribute("name", "pre_task_".concat(pre_task_number))
+            return pre_task
+        }
+
+        function append_pre_task(obj) {
+            var pre_tasks = obj.parentNode
+            var pre_task_number = pre_tasks.children.length
+            pre_tasks.insertBefore(new_pre_task(pre_task_number), obj)
+        }
+
+        function remove_pre_task(obj) {
+            var pre_task = obj.parentNode
+            var pre_tasks = pre_task.parentNode
+            pre_tasks.removeChild(pre_task)
+
+            for (i = 0; i < pre_tasks.children.length - 1; i++) {
+                var pre_task_item = pre_tasks.children[i]
+                console.log(pre_task_item.children)
+                var e = pre_task_item.children[1]
+                var e_old_name = e.getAttribute("name")
+                var e_new_name = e_old_name.replace(/pre_task_[0-9]+/, "pre_task_".concat(i))
+                e.setAttribute("name", e_new_name)
+            }
+        }
+    </script>
+    <form action="{% url 'main:task_create_or_update_submit' %}" method="post">{% csrf_token %}
+        <div class="detail">
+            <div>Id
+                <input type="text" name="id" value="{{ task.id }}" readonly="readonly">
+            </div>
+            <div>Project:
+                <select name="project">
+                    <option value="">---------</option>
+                    {% for project in projects %}
+                        {% if task.project == project %}
+                            <option value="{{ project }}" selected="selected">{{ project }}</option>
+                        {% else %}
+                            <option value="{{ project }}">{{ project }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+            </div>
+            <div>Title:
+                <input type="text" name="title" value="{{ task.title|default:'' }}">
+            </div>
+            <div>Description:
+                <input type="text" name="description" value="{{ task.description|default:'' }}">
+            </div>
+            <div>Reference:
+                <input type="text" name="reference" value="{{ task.reference|default:'' }}">
+            </div>
+            <div>Priority:
+                <input type="text" name="priority" value="{{ task.priority|default:'' }}">
+            </div>
+            <div>Cost:
+                <input type="text" name="cost" value="{{ task.cost|default:'' }}">
+            </div>
+            <div>Deadline:
+                <input type="text" name="deadline" value="{{ task.deadline|default:'' }}">
+            </div>
+            <div>Assignee:
+                <input type="text" name="assignee" value="{{ task.assignee|default:'' }}">
+            </div>
+            <div>Status:
+                <input type="text" name="status" value="{{ task.status|default:'' }}">
+            </div>
+            <div>Pre tasks:
+                {% if task.pre_tasks %}
+                    {% for pre_task in task.pre_tasks %}
+                        <div>
+                            <button type='button' onclick="remove_pre_task(this)">Remove</button>
+                            <select name="pre_task_{{ forloop.counter }}">
+                                {% for other_task in other_tasks %}
+                                    {% if pre_task == other_task %}
+                                        <option value="{{ other_task }}" selected="selected">{{ other_task }}</option>
+                                    {% else %}
+                                        <option value="{{ other_task }}">{{ other_task }}</option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                <button type='button' onclick="append_pre_task(this)">Append</button>
+            </div>
+        </div>
+        <div class="submit"><input class="btn btn-default" type="submit" value="Submit"></div>
+    </form>
+{% endblock %}

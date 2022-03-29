@@ -49,7 +49,7 @@ class Task(models.Model):
         return reverse('main:task_detail', kwargs={'pk':self.pk})
 
     def __str__(self):
-        return self.title
+        return '#%d %s' % (self.id, self.title)
 
 
 class TaskPosition(models.Model):
