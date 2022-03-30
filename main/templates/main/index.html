@@ -12,6 +12,7 @@
 
     // Set to 00:00:00:000 today
     Highcharts.setOptions({global: {useUTC: false}})
+    var format = '%Y-%m-%d'
     var today = new Date()
     today.setUTCHours(0)
     today.setUTCMinutes(0)
@@ -28,31 +29,24 @@
         series: seriesObject,
         tooltip: {
             pointFormatter: function () {
-                var point = this
-                var format = '%e. %b'
-                var options = point.options
-                var completed = options.completed
+                var completed = this.options.completed
                 var amount = isObject(completed) ? completed.amount : completed
                 var status = ((amount || 0) * 100) + '%'
-                var lines
 
-                lines = [
+                var lines = [
                     {
-                        value: point.name,
-                        style: 'font-weight: bold'
-                    }, {
                         title: 'Start',
-                        value: dateFormat(format, point.start)
+                        value: dateFormat(format, this.start)
                     }, {
-                        visible: !options.milestone,
+                        visible: !this.options.milestone,
                         title: 'End',
-                        value: dateFormat(format, point.end)
+                        value: dateFormat(format, this.end)
                     }, {
                         title: 'Completed',
                         value: status
                     }, {
-                        title: 'Owner',
-                        value: options.owner || 'unassigned'
+                        title: 'Assignee',
+                        value: this.options.assignee || 'unassigned'
                     }
                 ]
 

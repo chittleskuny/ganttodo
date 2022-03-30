@@ -100,19 +100,38 @@ class TaskDetailView(generic.DetailView):
 
 def task_create(request):
     project_objects = Project.objects.order_by('name')
+
     other_task_objects = Task.objects.order_by('id')
-    return render(request, 'main/task_create_or_update.html', {'projects':project_objects, 'other_tasks': other_task_objects})
+
+    return render(request, 'main/task_create_or_update.html', {
+        'projects': project_objects,
+        'priority_choice_list': PRIORITY_CHOICE_LIST,
+        'status_choice_list': STATUS_CHOICE_LIST,
+        'other_tasks': other_task_objects,
+    })
 
 
 def task_update(request, pk):
     task_object = Task.objects.get(pk=pk)
+
     project_objects = Project.objects.order_by('name')
+
+    task_object.priority = PRIORITY_CHOICE_LIST[task_object.priority]
+    task_object.status = STATUS_CHOICE_LIST[task_object.status]
+
     task_object.pre_tasks = []
     taskposition_objects = TaskPosition.objects.filter(post=task_object)
     for taskposition_object in taskposition_objects:
         task_object.pre_tasks.append(taskposition_object.pre)
     other_task_objects = Task.objects.filter(project=task_object.project).order_by('id')
-    return render(request, 'main/task_create_or_update.html', {'task':task_object, 'projects':project_objects, 'other_tasks': other_task_objects})
+    
+    return render(request, 'main/task_create_or_update.html', {
+        'task': task_object,
+        'projects': project_objects,
+        'priority_choice_list': PRIORITY_CHOICE_LIST,
+        'status_choice_list': STATUS_CHOICE_LIST,
+        'other_tasks': other_task_objects,
+    })
 
 
 def task_create_or_update_submit(request):
@@ -144,7 +163,7 @@ def task_create_or_update_submit(request):
     
     reference = None if reference == '' else reference
 
-    priority = 0 if priority == '' else int(priority)
+    priority = PRIORITY_CHOICE_LIST.index(priority)
 
     cost = 0 if cost == '' else int(cost)
 
@@ -156,7 +175,7 @@ def task_create_or_update_submit(request):
     else:
         assignee = User.objects.get(name=assignee)
 
-    status = 0 if status == '' else int(status)
+    status = STATUS_CHOICE_LIST.index(status)
 
     try:
         task_object = Task.objects.get(pk=id)

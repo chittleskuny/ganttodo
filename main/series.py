@@ -27,7 +27,7 @@ def add_doing_task_objects(user_cur, series_object_dict):
         user = 'nobody'
         if task_object.assignee is not None:
             user = task_object.assignee.name
-            series_project_task_object['owner'] = user
+            series_project_task_object['assignee'] = user
 
         start = convert_date_to_timestamp(task_object.start)
         series_project_task_object['start'] = start
@@ -129,7 +129,7 @@ def add_todo_task_objects(user_cur, user_starts, series_object_dict):
         user = 'nobody'
         if task_object.assignee is not None:
             user = task_object.assignee.name
-            series_project_task_object['owner'] = user
+            series_project_task_object['assignee'] = user
 
         start = user_cur[user]
         if task_object.start is not None:

@@ -68,7 +68,15 @@
                 <input type="text" name="reference" value="{{ task.reference|default:'' }}">
             </div>
             <div>Priority:
-                <input type="text" name="priority" value="{{ task.priority|default:'' }}">
+                <select name="priority">
+                    {% for priority_choice in priority_choice_list %}
+                        {% if task.priority == priority_choice %}
+                            <option value="{{ priority_choice }}" selected="selected">{{ priority_choice }}</option>
+                        {% else %}
+                            <option value="{{ priority_choice }}">{{ priority_choice }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
             </div>
             <div>Cost:
                 <input type="text" name="cost" value="{{ task.cost|default:'' }}">
@@ -83,7 +91,15 @@
                 <input type="text" name="assignee" value="{{ task.assignee|default:'' }}">
             </div>
             <div>Status:
-                <input type="text" name="status" value="{{ task.status|default:0 }}">
+                <select name="status">
+                    {% for status_choice in status_choice_list %}
+                        {% if task.status == status_choice %}
+                            <option value="{{ status_choice }}" selected="selected">{{ status_choice }}</option>
+                        {% else %}
+                            <option value="{{ status_choice }}">{{ status_choice }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
             </div>
             <div>Pre tasks:
                 {% if task.pre_tasks %}
