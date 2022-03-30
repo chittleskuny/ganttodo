@@ -20,7 +20,7 @@ def add_doing_task_objects(user_cur, series_object_dict):
     doing_task_objects = Task.objects.filter(status=STATUS_CHOICE_LIST.index('doing')).order_by('id')
     for task_object in doing_task_objects:
         series_project_task_object = {
-            'id': str(task_object.id),
+            'id': 'task_%d' % task_object.id,
             'name': str(task_object),
         }
 
@@ -42,6 +42,7 @@ def add_doing_task_objects(user_cur, series_object_dict):
             # TODO warning
 
         if task_object.project is not None:
+            series_project_task_object['parent'] = 'project_%d' % task_object.project.id
             series_object_dict[task_object.project.name]['data'].append(series_project_task_object)
 
 
@@ -122,7 +123,7 @@ def add_todo_task_objects(user_cur, user_starts, series_object_dict):
             raise ValueError('Cannot continue!')
 
         series_project_task_object = {
-            'id': str(task_object.id),
+            'id': 'task_%d' % task_object.id,
             'name': str(task_object),
         }
 
@@ -143,6 +144,7 @@ def add_todo_task_objects(user_cur, user_starts, series_object_dict):
         series_project_task_object['end'] = end
         
         if task_object.project is not None:
+            series_project_task_object['parent'] = 'project_%d' % task_object.project.id
             series_object_dict[task_object.project.name]['data'].append(series_project_task_object)
 
         todo_task_objects.remove(task_object)
@@ -164,7 +166,12 @@ def get_series_object():
     for project_object in project_objects:
         series_object_dict[project_object.name] = {
             'name': project_object.name,
-            'data': [],
+            'data': [
+                {
+                    'id': 'project_%d' % project_object.id,
+                    'name': project_object.name,
+                }
+            ],
         }
 
     add_doing_task_objects(user_cur, series_object_dict)
