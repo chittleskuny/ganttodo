@@ -8,8 +8,8 @@ from django.urls import reverse
 PRIORITY_CHOICE_TUPLE = ((0, '☆☆☆'), (1, '★☆☆'), (2, '★★☆'), (3, '★★★'))
 PRIORITY_CHOICE_LIST = ['☆☆☆', '★☆☆', '★★☆', '★★★']
 
-STATUS_CHOICE_TUPLE = ((0, 'todo'), (1, 'doing'), (2, 'done'), (4, 'aborted'))
-STATUS_CHOICE_LIST = ['todo', 'doing', 'done', 'aborted']
+STATUS_CHOICE_TUPLE = ((0, 'Todo'), (1, 'Doing'), (2, 'Done'), (4, 'Aborted'))
+STATUS_CHOICE_LIST = ['Todo', 'Doing', 'Done', 'Aborted']
 
 
 class User(models.Model):

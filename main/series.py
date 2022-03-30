@@ -17,7 +17,7 @@ today = convert_date_to_timestamp(datetime.date.today())
 
 
 def add_doing_task_objects(user_cur, series_object_dict):
-    doing_task_objects = Task.objects.filter(status=STATUS_CHOICE_LIST.index('doing')).order_by('id')
+    doing_task_objects = Task.objects.filter(status=STATUS_CHOICE_LIST.index('Doing')).order_by('id')
     for task_object in doing_task_objects:
         series_project_task_object = {
             'id': 'task_%d' % task_object.id,
@@ -47,7 +47,7 @@ def add_doing_task_objects(user_cur, series_object_dict):
 
 
 def get_user_starts(user_starts):
-    task_objects = list(Task.objects.filter(status=STATUS_CHOICE_LIST.index('todo')).filter(~Q(start=None)).order_by('start'))
+    task_objects = list(Task.objects.filter(status=STATUS_CHOICE_LIST.index('Todo')).filter(~Q(start=None)).order_by('start'))
     for task_object in task_objects:
         start = convert_date_to_timestamp(task_object.start)
 
@@ -84,7 +84,7 @@ def remove_task_object_from_taskposition_objects(task_object, taskposition_objec
 def add_todo_task_objects(user_cur, user_starts, series_object_dict):
     get_user_starts(user_starts)
 
-    todo_task_objects = list(Task.objects.filter(status=STATUS_CHOICE_LIST.index('todo')).order_by('-priority'))
+    todo_task_objects = list(Task.objects.filter(status=STATUS_CHOICE_LIST.index('Todo')).order_by('-priority'))
     taskposition_objects = list(TaskPosition.objects.all())
 
     while todo_task_objects:
@@ -184,5 +184,5 @@ def get_series_object():
 
     toc = time.time()
     tictoc = toc - tic
-    print('tictoc: %ss' % tictoc)
+    print('Getting series object cost %.3fs.' % tictoc)
     return series_object_list
