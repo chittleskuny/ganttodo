@@ -140,7 +140,7 @@ def task_create_or_update_submit(request):
     title = request.POST.get('title').strip()
     description = request.POST.get('description').strip()
     reference = request.POST.get('reference').strip()
-    milestone = request.POST.get('milestone').strip()
+    milestone = request.POST.get('milestone')
     priority = request.POST.get('priority').strip()
     cost = request.POST.get('cost').strip()
     start = request.POST.get('start').strip()

@@ -68,7 +68,7 @@
                 <input type="text" name="reference" value="{{ task.reference|default:'' }}">
             </div>
             <div>Milestone:
-                <input type="checkbox" name="milestone" {% if chapter.milestone %} checked="checked" {% endif %}>
+                <input type="checkbox" name="milestone" {% if task.milestone %} checked="checked" {% endif %}>
             </div>
             <div>Priority:
                 <select name="priority">
