@@ -27,7 +27,7 @@ def add_doing_task_objects(user_cur, series_object_dict):
 
         username = 'nobody'
         if task_object.assignee is not None:
-            user = task_object.assignee.name
+            user = task_object.assignee.username
             series_project_task_object['assignee'] = user
 
         start = convert_date_to_timestamp(task_object.start)
@@ -54,7 +54,7 @@ def get_user_starts(user_starts):
 
         username = 'nobody'
         if task_object.assignee is not None:
-            user = task_object.assignee.name
+            user = task_object.assignee.username
 
         user_starts[user].append(start)
 

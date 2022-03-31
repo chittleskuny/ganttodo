@@ -38,13 +38,13 @@ class UserDetailView(generic.DetailView):
 
 class UserCreateView(generic.CreateView):
     model = User
-    fields = ['name']
+    fields = ['username']
     template_name = 'main/create.html'
 
 
 class UserUpdateView(generic.UpdateView):
     model = User
-    fields = ['name']
+    fields = ['username']
     template_name = 'main/update.html'
 
 
@@ -175,7 +175,7 @@ def task_create_or_update_submit(request):
     start = None if start == '' else start
     deadline = None if deadline == '' else deadline
 
-    assignee = None if assignee == '' else User.objects.get(name=assignee)
+    assignee = None if assignee == '' else User.objects.get(username=assignee)
 
     status = STATUS_CHOICE_LIST.index(status)
 
