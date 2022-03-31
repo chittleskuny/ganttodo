@@ -6,13 +6,6 @@ from .models import *
 # Register your models here.
 
 
-class UserAdmin(admin.ModelAdmin):
-    fieldsets = [
-        ('basic', {'fields': ['name']}),
-    ]
-    list_display = ('id', 'name',)
-
-
 class ProjectAdmin(admin.ModelAdmin):
     fieldsets = [
         ('basic', {'fields': ['name']}),
@@ -66,7 +59,6 @@ class CalendarAdmin(admin.ModelAdmin):
     list_display = ('date', 'is_holiday',)
 
 
-admin.site.register(User, UserAdmin)
 admin.site.register(Project, ProjectAdmin)
 admin.site.register(Task, TaskAdmin)
 admin.site.register(TaskPosition, TaskPositionAdmin)

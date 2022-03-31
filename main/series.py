@@ -25,7 +25,7 @@ def add_doing_task_objects(user_cur, series_object_dict):
             'milestone': task_object.milestone,
         }
 
-        user = 'nobody'
+        username = 'nobody'
         if task_object.assignee is not None:
             user = task_object.assignee.name
             series_project_task_object['assignee'] = user
@@ -36,8 +36,8 @@ def add_doing_task_objects(user_cur, series_object_dict):
         end = start + unit * task_object.cost
         if end > today:
             series_project_task_object['end'] = end
-            if end > user_cur[user]:
-                user_cur[user] = series_project_task_object['end']
+            if end > user_cur[username]:
+                user_cur[username] = series_project_task_object['end']
         else:
             series_project_task_object['end'] = today
             # TODO warning
@@ -52,7 +52,7 @@ def get_user_starts(user_starts):
     for task_object in task_objects:
         start = convert_date_to_timestamp(task_object.start)
 
-        user = 'nobody'
+        username = 'nobody'
         if task_object.assignee is not None:
             user = task_object.assignee.name
 
@@ -96,9 +96,9 @@ def add_todo_task_objects(user_cur, user_starts, series_object_dict):
         choose = None
         candicate = None
         for task_object in ready_todo_task_objects:
-            user = 'nobody'
+            username = 'nobody'
             if task_object.assignee is not None:
-                user = task_object.assignee.name
+                user = task_object.assignee.username
 
             if task_object.start is not None:
                 candicate = task_object
@@ -107,7 +107,7 @@ def add_todo_task_objects(user_cur, user_starts, series_object_dict):
                 choose = task_object
                 break
             else:
-                user_cur_to_start = user_starts[user][0] - user_cur[user]
+                user_cur_to_start = user_starts[user][0] - user_cur[username]
                 cost =  unit * task_object.cost
                 if user_cur_to_start < 0:
                     raise ValueError('???')
@@ -129,20 +129,20 @@ def add_todo_task_objects(user_cur, user_starts, series_object_dict):
             'milestone': task_object.milestone,
         }
 
-        user = 'nobody'
+        username = 'nobody'
         if task_object.assignee is not None:
-            user = task_object.assignee.name
+            user = task_object.assignee.username
             series_project_task_object['assignee'] = user
 
-        start = user_cur[user]
+        start = user_cur[username]
         if task_object.start is not None:
             start = convert_date_to_timestamp(task_object.start)
-            user_cur[user] = start
+            user_cur[username] = start
             user_starts[user].remove(start)
         series_project_task_object['start'] = start
 
-        end = user_cur[user] + unit * task_object.cost
-        user_cur[user] = end
+        end = user_cur[username] + unit * task_object.cost
+        user_cur[username] = end
         series_project_task_object['end'] = end
         
         if task_object.project is not None:
@@ -160,8 +160,8 @@ def get_series_object():
     user_starts = {'nobody': []}
     user_objects = User.objects.all()
     for user_object in user_objects:
-        user_cur[user_object.name] = today
-        user_starts[user_object.name] = []
+        user_cur[user_object.username] = today
+        user_starts[user_object.username] = []
 
     series_object_dict = {}
     project_objects = Project.objects.all()

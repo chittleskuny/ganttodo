@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from django.db import models
 from django.urls import reverse
 
@@ -10,17 +11,6 @@ PRIORITY_CHOICE_LIST = ['☆☆☆', '★☆☆', '★★☆', '★★★']
 
 STATUS_CHOICE_TUPLE = ((0, 'Todo'), (1, 'Doing'), (2, 'Done'), (4, 'Aborted'))
 STATUS_CHOICE_LIST = ['Todo', 'Doing', 'Done', 'Aborted']
-
-
-class User(models.Model):
-    id = models.AutoField(primary_key=True)
-    name = models.CharField(max_length=255, default=None, blank=False, null=False)
-
-    def get_absolute_url(self):
-        return reverse('main:user_detail', kwargs={'pk':self.pk})
-
-    def __str__(self):
-        return self.name
 
 
 class Project(models.Model):
