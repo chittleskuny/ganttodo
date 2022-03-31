@@ -22,6 +22,7 @@ def add_doing_task_objects(user_cur, series_object_dict):
         series_project_task_object = {
             'id': 'task_%d' % task_object.id,
             'name': str(task_object),
+            'milestone': task_object.milestone,
         }
 
         user = 'nobody'
@@ -125,6 +126,7 @@ def add_todo_task_objects(user_cur, user_starts, series_object_dict):
         series_project_task_object = {
             'id': 'task_%d' % task_object.id,
             'name': str(task_object),
+            'milestone': task_object.milestone,
         }
 
         user = 'nobody'

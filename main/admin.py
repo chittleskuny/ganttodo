@@ -22,9 +22,34 @@ class ProjectAdmin(admin.ModelAdmin):
 
 class TaskAdmin(admin.ModelAdmin):
     fieldsets = [
-        ('basic', {'fields': ['project', 'title', 'description', 'reference', 'priority', 'cost', 'start', 'deadline', 'assignee', 'status']}),
+        ('basic', {'fields': [
+            'project',
+            'title',
+            'description',
+            'reference',
+            'milestone',
+            'priority',
+            'cost',
+            'start',
+            'deadline',
+            'assignee',
+            'status'
+        ]}),
     ]
-    list_display = ('id', 'project', 'title', 'description', 'reference', 'priority', 'cost', 'start', 'deadline', 'assignee', 'status',)
+    list_display = (
+        'id',
+        'project',
+        'title',
+        'description',
+        'reference',
+        'milestone',
+        'priority',
+        'cost',
+        'start',
+        'deadline',
+        'assignee',
+        'status',
+    )
 
 
 class TaskPositionAdmin(admin.ModelAdmin):

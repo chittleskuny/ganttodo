@@ -40,6 +40,7 @@ class Task(models.Model):
     title = models.CharField(max_length=255, default=None, blank=False, null=False)
     description = models.TextField(max_length=65535, default=None, blank=False, null=True)
     reference = models.CharField(max_length=255, default=None, blank=True, null=True)
+    milestone = models.BooleanField(default=False, blank=False, null=False)
     priority = models.IntegerField(default=0, blank=False, null=False, choices=PRIORITY_CHOICE_TUPLE)
     cost = models.IntegerField(default=0, blank=False, null=False)
     start = models.DateField(default=None, blank=True, null=True)

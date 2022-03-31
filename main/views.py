@@ -140,6 +140,7 @@ def task_create_or_update_submit(request):
     title = request.POST.get('title').strip()
     description = request.POST.get('description').strip()
     reference = request.POST.get('reference').strip()
+    milestone = request.POST.get('milestone').strip()
     priority = request.POST.get('priority').strip()
     cost = request.POST.get('cost').strip()
     start = request.POST.get('start').strip()
@@ -163,17 +164,18 @@ def task_create_or_update_submit(request):
     
     reference = None if reference == '' else reference
 
+    milestone = True if milestone == 'on' else False
+
     priority = PRIORITY_CHOICE_LIST.index(priority)
 
     cost = 0 if cost == '' else int(cost)
+    if milestone:
+        cost = 0
 
     start = None if start == '' else start
     deadline = None if deadline == '' else deadline
 
-    if assignee == '':
-        assignee = None
-    else:
-        assignee = User.objects.get(name=assignee)
+    assignee = None if assignee == '' else User.objects.get(name=assignee)
 
     status = STATUS_CHOICE_LIST.index(status)
 
@@ -185,6 +187,7 @@ def task_create_or_update_submit(request):
             title = title,
             description = description,
             reference = reference,
+            milestone = milestone,
             priority = priority,
             cost = cost,
             start = start,
@@ -197,6 +200,7 @@ def task_create_or_update_submit(request):
         task_object.title = title
         task_object.description = description
         task_object.reference = reference
+        task_object.milestone = milestone
         task_object.priority = priority
         task_object.cost = cost
         task_object.start = start
