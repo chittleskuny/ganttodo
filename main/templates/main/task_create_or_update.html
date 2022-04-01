@@ -61,9 +61,6 @@
             <div>Title:
                 <input type="text" name="title" value="{{ task.title|default:'' }}">
             </div>
-            <div>Description:
-                <input type="text" name="description" value="{{ task.description|default:'' }}">
-            </div>
             <div>Reference:
                 <input type="text" name="reference" value="{{ task.reference|default:'' }}">
             </div>
@@ -124,6 +121,16 @@
                 <button type='button' onclick="append_pre_task(this)">Append</button>
             </div>
         </div>
+        <div>Description:
+            <textarea name="description" value="{{ task.description|default:'' }}"></textarea>
+        </div>
         <div class="submit"><input class="btn btn-default" type="submit" value="Submit"></div>
     </form>
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/editor/0.1.0/editor.css">
+    <script src="//cdn.jsdelivr.net/editor/0.1.0/editor.js"></script>
+    <script src="//cdn.jsdelivr.net/editor/0.1.0/marked.js"></script>
+    <script >
+        var editor = new Editor()
+        editor.render()
+    </script>
 {% endblock %}
