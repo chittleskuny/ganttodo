@@ -69,3 +69,29 @@ form {
 #ganttchart {
     clear: both;
 }
+
+#task_detail {
+    clear: both;
+    height: 768px;
+}
+
+#task_basic_outside {
+    float: left;
+    width: 20%;
+    height: 100%;
+}
+
+#task_basic_inside {
+    padding: 3px 3px 3px 3px;
+}
+
+#task_description_outside {
+    float: left;
+    width: 80%;
+    height: 100%;
+}
+
+#task_description_inside {
+    height: 100%;
+    padding: 3px 3px 3px 3px;
+}
