@@ -70,85 +70,105 @@
             </div>
             <div id="task_basic_outside">
                 <div id="task_basic_inside">
-                    <div>Id
-                        <input type="text" name="id" value="{{ task.id }}" readonly="readonly">
+                    <div id="task_basic_key">
+                        <ul>
+                            <li class="task_basic_key_item">Id</li>
+                            <li class="task_basic_key_item">Project</li>
+                            <li class="task_basic_key_item">Title</li>
+                            <li class="task_basic_key_item">Reference</li>
+                            <li class="task_basic_key_item">Milestone</li>
+                            <li class="task_basic_key_item">Priority</li>
+                            <li class="task_basic_key_item">Cost</li>
+                            <li class="task_basic_key_item">Start</li>
+                            <li class="task_basic_key_item">Deadline</li>
+                            <li class="task_basic_key_item">Assignee</li>
+                            <li class="task_basic_key_item">Status</li>
+                            <li class="task_basic_key_item">Pre tasks</li>
+                        </ul>
                     </div>
-                    <div>Project:
-                        <select name="project">
-                            <option value="">---------</option>
-                            {% for project in projects %}
-                                {% if task.project == project %}
-                                    <option value="{{ project }}" selected="selected">{{ project }}</option>
-                                {% else %}
-                                    <option value="{{ project }}">{{ project }}</option>
+                    <div id="task_basic_value">
+                        <ul>
+                            <li class="task_basic_value_item">
+                                <input type="text" name="id" value="{{ task.id }}" readonly="readonly">
+                            </li>
+                            <li class="task_basic_value_item">
+                                <select name="project">
+                                    <option value="">---------</option>
+                                    {% for project in projects %}
+                                        {% if task.project == project %}
+                                            <option value="{{ project }}" selected="selected">{{ project }}</option>
+                                        {% else %}
+                                            <option value="{{ project }}">{{ project }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </li>
+                            <li class="task_basic_value_item">
+                                <input type="text" name="title" value="{{ task.title|default:'' }}">
+                            </li>
+                            <li class="task_basic_value_item">
+                                <input type="text" name="reference" value="{{ task.reference|default:'' }}">
+                            </li>
+                            <li class="task_basic_value_item">
+                                <input type="checkbox" name="milestone" {% if task.milestone %} checked="checked" {% endif %}>
+                            </li>
+                            <li class="task_basic_value_item">
+                                <select name="priority">
+                                    {% for priority_choice in priority_choice_list %}
+                                        {% if task.priority == priority_choice %}
+                                            <option value="{{ priority_choice }}" selected="selected">{{ priority_choice }}</option>
+                                        {% else %}
+                                            <option value="{{ priority_choice }}">{{ priority_choice }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </li>
+                            <li class="task_basic_value_item">
+                                <input type="text" name="cost" value="{{ task.cost|default:'' }}">
+                            </li>
+                            <li class="task_basic_value_item">
+                                <input type="text" name="start" value="{{ task.start_yyyy_mm_dd|default:'' }}">
+                            </li>
+                            <li class="task_basic_value_item">
+                                <input type="text" name="deadline" value="{{ task.deadline_yyyy_mm_dd|default:'' }}">
+                            </li>
+                            <li class="task_basic_value_item">
+                                <input type="text" name="assignee" value="{{ task.assignee|default:'' }}">
+                            </li>
+                            <li class="task_basic_value_item">
+                                <select name="status">
+                                    {% for status_choice in status_choice_list %}
+                                        {% if task.status == status_choice %}
+                                            <option value="{{ status_choice }}" selected="selected">{{ status_choice }}</option>
+                                        {% else %}
+                                            <option value="{{ status_choice }}">{{ status_choice }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </li>
+                            <div>
+                                {% if task.pre_tasks %}
+                                    {% for pre_task in task.pre_tasks %}
+                                        <div>
+                                            <button type='button' onclick="remove_pre_task(this)">Remove</button>
+                                            <select name="pre_task_{{ forloop.counter }}">
+                                                {% for other_task in other_tasks %}
+                                                    {% if pre_task == other_task %}
+                                                        <option value="{{ other_task }}" selected="selected">{{ other_task }}</option>
+                                                    {% else %}
+                                                        <option value="{{ other_task }}">{{ other_task }}</option>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    {% endfor %}
                                 {% endif %}
-                            {% endfor %}
-                        </select>
+                                <button type='button' onclick="append_pre_task(this)">Append</button>
+                            </div>
+                        </ul>
                     </div>
-                    <div>Title:
-                        <input type="text" name="title" value="{{ task.title|default:'' }}">
-                    </div>
-                    <div>Reference:
-                        <input type="text" name="reference" value="{{ task.reference|default:'' }}">
-                    </div>
-                    <div>Milestone:
-                        <input type="checkbox" name="milestone" {% if task.milestone %} checked="checked" {% endif %}>
-                    </div>
-                    <div>Priority:
-                        <select name="priority">
-                            {% for priority_choice in priority_choice_list %}
-                                {% if task.priority == priority_choice %}
-                                    <option value="{{ priority_choice }}" selected="selected">{{ priority_choice }}</option>
-                                {% else %}
-                                    <option value="{{ priority_choice }}">{{ priority_choice }}</option>
-                                {% endif %}
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div>Cost:
-                        <input type="text" name="cost" value="{{ task.cost|default:'' }}">
-                    </div>
-                    <div>Start:
-                        <input type="text" name="start" value="{{ task.start_yyyy_mm_dd|default:'' }}">
-                    </div>
-                    <div>Deadline:
-                        <input type="text" name="deadline" value="{{ task.deadline_yyyy_mm_dd|default:'' }}">
-                    </div>
-                    <div>Assignee:
-                        <input type="text" name="assignee" value="{{ task.assignee|default:'' }}">
-                    </div>
-                    <div>Status:
-                        <select name="status">
-                            {% for status_choice in status_choice_list %}
-                                {% if task.status == status_choice %}
-                                    <option value="{{ status_choice }}" selected="selected">{{ status_choice }}</option>
-                                {% else %}
-                                    <option value="{{ status_choice }}">{{ status_choice }}</option>
-                                {% endif %}
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div>Pre tasks:
-                        {% if task.pre_tasks %}
-                            {% for pre_task in task.pre_tasks %}
-                                <div>
-                                    <button type='button' onclick="remove_pre_task(this)">Remove</button>
-                                    <select name="pre_task_{{ forloop.counter }}">
-                                        {% for other_task in other_tasks %}
-                                            {% if pre_task == other_task %}
-                                                <option value="{{ other_task }}" selected="selected">{{ other_task }}</option>
-                                            {% else %}
-                                                <option value="{{ other_task }}">{{ other_task }}</option>
-                                            {% endif %}
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                            {% endfor %}
-                        {% endif %}
-                        <button type='button' onclick="append_pre_task(this)">Append</button>
-                    </div>
-                    <div class="submit"><input class="btn btn-default" type="submit" value="Submit"></div>
                 </div>
+                <div class="submit"><input class="btn btn-default" type="submit" value="Submit"></div>
             </div>
         </div>
     </form>
