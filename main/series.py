@@ -16,49 +16,63 @@ def convert_date_to_timestamp(date):
 today = convert_date_to_timestamp(datetime.date.today())
 
 
-def add_doing_task_objects(user_cur, series_object_dict):
-    doing_task_objects = Task.objects.filter(status=STATUS_CHOICE_LIST.index('Doing')).order_by('id')
-    for task_object in doing_task_objects:
-        series_project_task_object = {
-            'id': 'task_%d' % task_object.id,
-            'name': str(task_object),
-            'milestone': task_object.milestone,
-        }
+def new_series_project_task_object(user_cur, task_object):
+    series_project_task_object = {
+        'id': 'task_%d' % task_object.id,
+        'name': str(task_object),
+        'milestone': task_object.milestone,
+    }
 
-        username = 'nobody'
-        if task_object.assignee is not None:
-            user = task_object.assignee.username
-            series_project_task_object['assignee'] = user
+    username = task_object.assignee.username
+    series_project_task_object['assignee'] = username
 
+    start = user_cur[username]
+    if task_object.start is not None:
         start = convert_date_to_timestamp(task_object.start)
         series_project_task_object['start'] = start
 
-        end = start + unit * task_object.cost
-        if end > today:
-            series_project_task_object['end'] = end
-            if end > user_cur[username]:
-                user_cur[username] = series_project_task_object['end']
-        else:
-            series_project_task_object['end'] = today
-            # TODO warning
+    end = start + unit * task_object.cost
+    if end > today:
+        series_project_task_object['end'] = end
+        if end > user_cur[username]:
+            user_cur[username] = series_project_task_object['end']
+    else:
+        series_project_task_object['end'] = today
+        # TODO warning
 
+    if task_object.project is not None:
+        series_project_task_object['parent'] = 'project_%d' % task_object.project.id
+
+    return user_cur, series_project_task_object
+
+
+def add_doing_task_objects(user_cur, series_object_dict):
+    doing_task_objects = list(
+        Task.objects.filter(~Q(assignee=None))
+                    .filter(status=STATUS_CHOICE_LIST.index('Doing'))
+                    .filter(status=STATUS_CHOICE_LIST.index('Doing'))
+                    .order_by('id')
+    )
+    for task_object in doing_task_objects:
+        user_cur, series_project_task_object = new_series_project_task_object(user_cur, task_object)
+        
         if task_object.project is not None:
-            series_project_task_object['parent'] = 'project_%d' % task_object.project.id
             series_object_dict[task_object.project.name]['data'].append(series_project_task_object)
 
 
 def get_user_starts(user_starts):
-    task_objects = list(Task.objects.filter(status=STATUS_CHOICE_LIST.index('Todo')).filter(~Q(start=None)).order_by('start'))
+    task_objects = list(
+        Task.objects.filter(~Q(start=None))
+                    .filter(~Q(assignee=None))
+                    .filter(status=STATUS_CHOICE_LIST.index('Todo'))
+                    .order_by('start')
+    )
     for task_object in task_objects:
         start = convert_date_to_timestamp(task_object.start)
+        username = task_object.assignee.username
+        user_starts[username].append(start)
 
-        username = 'nobody'
-        if task_object.assignee is not None:
-            user = task_object.assignee.username
-
-        user_starts[user].append(start)
-
-    for user, starts in user_starts.items():
+    for username, starts in user_starts.items():
         starts.sort()
 
 
@@ -85,7 +99,11 @@ def remove_task_object_from_taskposition_objects(task_object, taskposition_objec
 def add_todo_task_objects(user_cur, user_starts, series_object_dict):
     get_user_starts(user_starts)
 
-    todo_task_objects = list(Task.objects.filter(status=STATUS_CHOICE_LIST.index('Todo')).order_by('-priority'))
+    todo_task_objects = list(
+        Task.objects.filter(~Q(assignee=None))
+                    .filter(status=STATUS_CHOICE_LIST.index('Todo'))
+                    .order_by('-priority')
+    )
     taskposition_objects = list(TaskPosition.objects.all())
 
     while todo_task_objects:
@@ -96,19 +114,17 @@ def add_todo_task_objects(user_cur, user_starts, series_object_dict):
         choose = None
         candicate = None
         for task_object in ready_todo_task_objects:
-            username = 'nobody'
-            if task_object.assignee is not None:
-                user = task_object.assignee.username
+            username = task_object.assignee.username
 
             if task_object.start is not None:
                 candicate = task_object
 
-            if len(user_starts[user]) == 0:
+            if len(user_starts[username]) == 0:
                 choose = task_object
                 break
             else:
-                user_cur_to_start = user_starts[user][0] - user_cur[username]
-                cost =  unit * task_object.cost
+                user_cur_to_start = user_starts[username][0] - user_cur[username]
+                cost = unit * task_object.cost
                 if user_cur_to_start < 0:
                     raise ValueError('???')
                 elif user_cur_to_start < cost:
@@ -123,30 +139,12 @@ def add_todo_task_objects(user_cur, user_starts, series_object_dict):
         if choose is None:
             raise ValueError('Cannot continue!')
 
-        series_project_task_object = {
-            'id': 'task_%d' % task_object.id,
-            'name': str(task_object),
-            'milestone': task_object.milestone,
-        }
+        user_cur, series_project_task_object = new_series_project_task_object(user_cur, task_object)
 
-        username = 'nobody'
-        if task_object.assignee is not None:
-            user = task_object.assignee.username
-            series_project_task_object['assignee'] = user
-
-        start = user_cur[username]
         if task_object.start is not None:
-            start = convert_date_to_timestamp(task_object.start)
-            user_cur[username] = start
-            user_starts[user].remove(start)
-        series_project_task_object['start'] = start
-
-        end = user_cur[username] + unit * task_object.cost
-        user_cur[username] = end
-        series_project_task_object['end'] = end
+            user_starts[username].remove(user_cur[username])
         
         if task_object.project is not None:
-            series_project_task_object['parent'] = 'project_%d' % task_object.project.id
             series_object_dict[task_object.project.name]['data'].append(series_project_task_object)
 
         todo_task_objects.remove(task_object)
