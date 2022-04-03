@@ -1,0 +1,17 @@
+{% extends "main/base.html" %}
+{% block body %}
+    <div id="toolbar">
+        <div class="toolbar_item">
+            <a href="{{ serie.date_yyyy_mm_dd }}/delete"><button>Delete</button></a>
+        </div>
+        <div class="toolbar_item">
+            <a href="{{ serie.date_yyyy_mm_dd }}/update"><button>Update</button></a>
+        </div>
+    </div>
+    <div class="detail">
+        <p>Id: {{ serie.id }}</p>
+        <p>Task: {{ serie.task }}</p>
+        <p>Start: {{ serie.start }}</p>
+        <p>End: {{ serie.end }}</p>
+    </div>
+{% endblock %}

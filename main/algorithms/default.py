@@ -1,61 +1,39 @@
 from django.db.models import Q
 
-from .models import *
-
-import datetime, time
+from ..models import *
 
 
-day = 1000 * 60 * 60 * 24
-unit = day // 2 # TODO
 
-
-def convert_date_to_timestamp(date):
-    return 1000 * int(time.mktime(date.timetuple()))
-
-
-today = convert_date_to_timestamp(datetime.date.today())
-
-
-def new_series_project_task_object(user_cur, task_object):
-    series_project_task_object = {
-        'id': 'task_%d' % task_object.id,
-        'name': str(task_object),
-        'milestone': task_object.milestone,
-    }
+def new_serie_task_object(user_cur, task_object):
+    serie_task_object = {'task': task_object}
 
     username = task_object.assignee.username
-    series_project_task_object['assignee'] = username
 
     start = user_cur[username]
     if task_object.start is not None:
         start = convert_date_to_timestamp(task_object.start)
-    series_project_task_object['start'] = start
+    serie_task_object['start'] = start
 
-    end = start + unit * task_object.cost
-    series_project_task_object['end'] = end
+    end = start + UNIT * task_object.cost
+    serie_task_object['end'] = end
     if end > user_cur[username]:
-        user_cur[username] = series_project_task_object['end']
+        user_cur[username] = serie_task_object['end']
     else:
         pass
         # TODO warning
 
-    if task_object.project is not None:
-        series_project_task_object['parent'] = 'project_%d' % task_object.project.id
-
-    return user_cur, series_project_task_object
+    return user_cur, serie_task_object
 
 
-def add_doing_task_objects(user_cur, series_object_dict):
+def add_doing_task_objects(user_cur, serie_task_objects):
     doing_task_objects = list(
         Task.objects.filter(~Q(assignee=None))
                     .filter(status=STATUS_CHOICE_LIST.index('Doing'))
                     .order_by('id')
     )
     for task_object in doing_task_objects:
-        user_cur, series_project_task_object = new_series_project_task_object(user_cur, task_object)
-        
-        if task_object.project is not None:
-            series_object_dict[task_object.project.name]['data'].append(series_project_task_object)
+        user_cur, serie_task_object = new_serie_task_object(user_cur, task_object)
+        serie_task_objects.append(serie_task_object)
 
 
 def get_user_starts():
@@ -100,7 +78,7 @@ def remove_task_object_from_taskposition_objects(task_object, taskposition_objec
         taskposition_objects.remove(taskposition_object)
 
 
-def add_todo_task_objects(user_cur, series_object_dict):
+def add_todo_task_objects(user_cur, serie_task_objects):
     user_starts = get_user_starts()
 
     todo_task_objects = list(
@@ -128,7 +106,7 @@ def add_todo_task_objects(user_cur, series_object_dict):
                 break
             else:
                 user_cur_to_start = user_starts[username][0] - user_cur[username]
-                cost = unit * task_object.cost
+                cost = UNIT * task_object.cost
                 if user_cur_to_start < 0:
                     raise ValueError('???')
                 elif user_cur_to_start < cost:
@@ -143,45 +121,45 @@ def add_todo_task_objects(user_cur, series_object_dict):
         if choose is None:
             raise ValueError('Cannot continue!')
 
-        user_cur, series_project_task_object = new_series_project_task_object(user_cur, task_object)
+        user_cur, serie_task_object = new_serie_task_object(user_cur, task_object)
 
         if task_object.start is not None:
             user_starts[username].remove(user_cur[username])
         
-        if task_object.project is not None:
-            series_object_dict[task_object.project.name]['data'].append(series_project_task_object)
+        serie_task_objects.append(serie_task_object)
 
         todo_task_objects.remove(task_object)
         remove_task_object_from_taskposition_objects(task_object, taskposition_objects)
 
 
-def get_series_object():
+def save_serie_object(serie_task_objects):
+    Serie.objects.all().delete()
+
+    for serie_task_object in serie_task_objects:
+        serie_object = Serie(
+            task = serie_task_object['task'],
+            start = serie_task_object['start'],
+            end = serie_task_object['end'],
+        )
+        serie_object.save()
+
+
+def refresh_serie_objects():
     tic = time.time()
 
     user_cur = {}
     for user_object in User.objects.all():
-        user_cur[user_object.username] = today
+        user_cur[user_object.username] = TODAY
 
-    series_object_dict = {}
-    for project_object in Project.objects.all():
-        series_object_dict[project_object.name] = {
-            'name': project_object.name,
-            'data': [
-                {
-                    'id': 'project_%d' % project_object.id,
-                    'name': project_object.name,
-                }
-            ],
-        }
+    serie_task_objects = []
 
-    add_doing_task_objects(user_cur, series_object_dict)
-    # add_should_be_doing_task_objects(user_cur, series_object_dict)
-    add_todo_task_objects(user_cur, series_object_dict)
-    series_object_list = []
-    for key, value in series_object_dict.items():
-        series_object_list.append(value)
+    add_doing_task_objects(user_cur, serie_task_objects)
+    # add_should_be_doing_task_objects(user_cur, serie_task_objects)
+    add_todo_task_objects(user_cur, serie_task_objects)
+    
+    save_serie_object(serie_task_objects)
 
     toc = time.time()
     tictoc = toc - tic
-    print('Getting series object cost %.3fs.' % tictoc)
-    return series_object_list
+    print('Refreshing serie objects cost %.3fs.' % tictoc)
+    return True

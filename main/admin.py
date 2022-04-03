@@ -59,7 +59,15 @@ class CalendarAdmin(admin.ModelAdmin):
     list_display = ('date', 'is_holiday',)
 
 
+class SerieAdmin(admin.ModelAdmin):
+    fieldsets = [
+        ('basic', {'fields': ['task', 'start', 'end']}),
+    ]
+    list_display = ('id', 'task', 'start', 'end',)
+
+
 admin.site.register(Project, ProjectAdmin)
 admin.site.register(Task, TaskAdmin)
 admin.site.register(TaskPosition, TaskPositionAdmin)
 admin.site.register(Calendar, CalendarAdmin)
+admin.site.register(Serie, SerieAdmin)

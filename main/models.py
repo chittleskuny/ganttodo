@@ -2,8 +2,26 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.urls import reverse
 
+import datetime, time
+
 
 # Create your models here.
+
+
+DAY = 1000 * 60 * 60 * 24
+UNIT = DAY // 2 # TODO
+
+
+def convert_date_to_timestamp(date):
+    return 1000 * int(time.mktime(date.timetuple()))
+
+
+def convert_timestamp_to_date(timestamp):
+    return time.strftime('%Y-%m-%d', time.localtime(timestamp / 1000))
+
+
+TODAY = convert_date_to_timestamp(datetime.date.today())
+NOW = 1000 * int(time.time())
 
 
 PRIORITY_CHOICE_TUPLE = ((0, '☆☆☆'), (1, '★☆☆'), (2, '★★☆'), (3, '★★★'))
@@ -18,7 +36,7 @@ class Project(models.Model):
     name = models.CharField(max_length=255, default=None, blank=False, null=False)
 
     def get_absolute_url(self):
-        return reverse('main:project_detail', kwargs={'pk':self.pk})
+        return reverse('main:project_detail', kwargs={'pk': self.pk})
 
     def __str__(self):
         return self.name
@@ -39,7 +57,7 @@ class Task(models.Model):
     status = models.IntegerField(default=0, blank=False, null=False, choices=STATUS_CHOICE_TUPLE)
 
     def get_absolute_url(self):
-        return reverse('main:task_detail', kwargs={'pk':self.pk})
+        return reverse('main:task_detail', kwargs={'pk': self.pk})
 
     def start_yyyy_mm_dd(self):
         return '' if self.start is None else str(self.start)
@@ -57,7 +75,7 @@ class TaskPosition(models.Model):
     post = models.ForeignKey(Task, related_name='post_task', default=None, blank=False, null=False, on_delete=models.CASCADE)
 
     def get_absolute_url(self):
-        return reverse('main:taskposition_detail', kwargs={'pk':self.pk})
+        return reverse('main:taskposition_detail', kwargs={'pk': self.pk})
 
     def __str__(self):
         return '%s -> %s' % (self.pre, self.post)
@@ -68,10 +86,23 @@ class Calendar(models.Model):
     is_holiday = models.BooleanField(default=False, blank=False, null=False)
 
     def get_absolute_url(self):
-        return reverse('main:calendar_detail', kwargs={'pk':self.pk})
+        return reverse('main:calendar_detail', kwargs={'pk': self.pk})
 
     def date_yyyy_mm_dd(self):
         return str(self.date)
 
     def __str__(self):
         return '%s %s' % (self.date, self.is_holiday)
+
+
+class Serie(models.Model):
+    id = models.AutoField(primary_key=True)
+    task = models.ForeignKey(Task, default=None, blank=None, null=None, on_delete=models.CASCADE)
+    start = models.BigIntegerField(default=0, blank=False, null=False)
+    end = models.BigIntegerField(default=0, blank=False, null=False)
+
+    def get_absolute_url(self):
+        return reverse('main:serie_detail', kwargs={'pk': self.pk})
+
+    def __str__(self):
+        return '%s [%d, %d]' % (self.task, self.start, self.end)
