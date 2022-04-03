@@ -29,15 +29,14 @@ def new_series_project_task_object(user_cur, task_object):
     start = user_cur[username]
     if task_object.start is not None:
         start = convert_date_to_timestamp(task_object.start)
-        series_project_task_object['start'] = start
+    series_project_task_object['start'] = start
 
     end = start + unit * task_object.cost
-    if end > today:
-        series_project_task_object['end'] = end
-        if end > user_cur[username]:
-            user_cur[username] = series_project_task_object['end']
+    series_project_task_object['end'] = end
+    if end > user_cur[username]:
+        user_cur[username] = series_project_task_object['end']
     else:
-        series_project_task_object['end'] = today
+        pass
         # TODO warning
 
     if task_object.project is not None:
@@ -50,7 +49,6 @@ def add_doing_task_objects(user_cur, series_object_dict):
     doing_task_objects = list(
         Task.objects.filter(~Q(assignee=None))
                     .filter(status=STATUS_CHOICE_LIST.index('Doing'))
-                    .filter(status=STATUS_CHOICE_LIST.index('Doing'))
                     .order_by('id')
     )
     for task_object in doing_task_objects:
@@ -60,7 +58,11 @@ def add_doing_task_objects(user_cur, series_object_dict):
             series_object_dict[task_object.project.name]['data'].append(series_project_task_object)
 
 
-def get_user_starts(user_starts):
+def get_user_starts():
+    user_starts = {}
+    for user_object in User.objects.all():
+        user_starts[user_object.username] = []
+
     task_objects = list(
         Task.objects.filter(~Q(start=None))
                     .filter(~Q(assignee=None))
@@ -74,6 +76,8 @@ def get_user_starts(user_starts):
 
     for username, starts in user_starts.items():
         starts.sort()
+
+    return user_starts
 
 
 def get_ready_todo_task_objects(todo_task_objects, taskposition_objects):
@@ -96,8 +100,8 @@ def remove_task_object_from_taskposition_objects(task_object, taskposition_objec
         taskposition_objects.remove(taskposition_object)
 
 
-def add_todo_task_objects(user_cur, user_starts, series_object_dict):
-    get_user_starts(user_starts)
+def add_todo_task_objects(user_cur, series_object_dict):
+    user_starts = get_user_starts()
 
     todo_task_objects = list(
         Task.objects.filter(~Q(assignee=None))
@@ -154,16 +158,12 @@ def add_todo_task_objects(user_cur, user_starts, series_object_dict):
 def get_series_object():
     tic = time.time()
 
-    user_cur = {'nobody': today}
-    user_starts = {'nobody': []}
-    user_objects = User.objects.all()
-    for user_object in user_objects:
+    user_cur = {}
+    for user_object in User.objects.all():
         user_cur[user_object.username] = today
-        user_starts[user_object.username] = []
 
     series_object_dict = {}
-    project_objects = Project.objects.all()
-    for project_object in project_objects:
+    for project_object in Project.objects.all():
         series_object_dict[project_object.name] = {
             'name': project_object.name,
             'data': [
@@ -176,8 +176,7 @@ def get_series_object():
 
     add_doing_task_objects(user_cur, series_object_dict)
     # add_should_be_doing_task_objects(user_cur, series_object_dict)
-    add_todo_task_objects(user_cur, user_starts, series_object_dict)
-
+    add_todo_task_objects(user_cur, series_object_dict)
     series_object_list = []
     for key, value in series_object_dict.items():
         series_object_list.append(value)
