@@ -23,6 +23,19 @@ class IndexView(generic.base.TemplateView):
         return super().get_context_data(**context)
 
 
+def login(request):
+    return render(request, 'main/login.html')
+
+
+def login_submit(request):
+    username = request.POST.get('username').strip()
+    password = request.POST.get('password').strip()
+    print(username)
+    print(password)
+
+    return HttpResponseRedirect(reverse_lazy('main:index'))
+
+
 class UserListView(generic.ListView):
     model = User
     context_object_name = 'queryset_list'

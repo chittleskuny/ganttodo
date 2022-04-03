@@ -57,12 +57,25 @@ form {
     clear: both;
 }
 
+.form-item {
+    margin: 3px;
+}
+
 .submit {
     margin: 6px;
 }
 
 .task_basic_key_item, .task_basic_value_item {
     height: 25px;
+}
+
+#login-container {
+    text-align: center;
+}
+
+#login {
+    margin: 0 auto;
+    padding: 10%;
 }
 
 #toolbar {

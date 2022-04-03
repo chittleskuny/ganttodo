@@ -132,3 +132,5 @@ static/node_modules/
 
 collect_static/
 uwsgi.pid
+
+runserver.bat
