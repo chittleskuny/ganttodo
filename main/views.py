@@ -44,7 +44,7 @@ def get_serie_objects():
             'assignee': task_object.assignee.username,
             'status': task_object.status,
             'start': serie_object.start,
-            'end': serie_object.end,
+            'end': serie_object.end - 1000,
         }
 
         project_object = serie_object.task.project

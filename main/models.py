@@ -104,5 +104,11 @@ class Serie(models.Model):
     def get_absolute_url(self):
         return reverse('main:serie_detail', kwargs={'pk': self.pk})
 
+    def start_date(self):
+        return convert_timestamp_to_date(self.start)
+
+    def end_date(self):
+        return convert_timestamp_to_date(self.end - 1000)
+
     def __str__(self):
-        return '%s [%d, %d]' % (self.task, self.start, self.end)
+        return '#%d [%s, %s] %s' % (self.task.id, self.start_date(), self.end_date(), self.task.title)

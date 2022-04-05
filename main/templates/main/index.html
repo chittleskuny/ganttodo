@@ -5,14 +5,7 @@
 <div id="ganttchart"></div>
 <script>
 
-    // Utility functions
-    var dateFormat = Highcharts.dateFormat
-    var defined = Highcharts.defined
-    var isObject = Highcharts.isObject
-
     // Set to 00:00:00:000 today
-    Highcharts.setOptions({global: {useUTC: false}})
-    var format = '%Y-%m-%d'
     var today = new Date()
     today.setUTCHours(0)
     today.setUTCMinutes(0)
@@ -27,20 +20,26 @@
 
     Highcharts.ganttChart('ganttchart', {
         series: seriesObject,
+        time: {
+            useUTC: false,
+        },
+        title: {
+            text: 'Gantt Project Management'
+        },
         tooltip: {
             pointFormatter: function () {
                 var completed = this.options.completed
-                var amount = isObject(completed) ? completed.amount : completed
+                var amount = Highcharts.isObject(completed) ? completed.amount : completed
                 var status = ((amount || 0) * 100) + '%'
 
                 var lines = [
                     {
                         title: 'Start',
-                        value: dateFormat(format, this.start)
+                        value: Highcharts.dateFormat('%Y-%m-%d', this.start)
                     }, {
                         visible: !this.options.milestone,
                         title: 'End',
-                        value: dateFormat(format, this.end)
+                        value: Highcharts.dateFormat('%Y-%m-%d', this.end)
                     }, {
                         title: 'Completed',
                         value: status
@@ -53,13 +52,13 @@
                 return lines.reduce(function (str, line) {
                     var s = ''
                     var style = (
-                        defined(line.style) ? line.style : 'font-size: 0.8em'
+                        Highcharts.defined(line.style) ? line.style : 'font-size: 0.8em'
                     )
                     if (line.visible !== false) {
                         s = (
                             '<span style="' + style + '">' +
-                            (defined(line.title) ? line.title + ': ' : '') +
-                            (defined(line.value) ? line.value : '') +
+                            (Highcharts.defined(line.title) ? line.title + ': ' : '') +
+                            (Highcharts.defined(line.value) ? line.value : '') +
                             '</span><br/>'
                         )
                     }
@@ -67,13 +66,10 @@
                 }, '')
             }
         },
-        title: {
-            text: 'Gantt Project Management'
-        },
         xAxis: {
             currentDateIndicator: true,
+            max: today + 20 * day,
             min: today - 5 * day,
-            max: today + 20 * day
         }
     })
 </script>
