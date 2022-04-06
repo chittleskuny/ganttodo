@@ -40,9 +40,9 @@ urlpatterns = [
     path('calendar/<str:pk>/update', views.CalendarUpdateView.as_view(), name='calendar_update'),
     path('calendar/<str:pk>/delete', views.CalendarDeleteView.as_view(), name='calendar_delete'),
 
-    path('Serie/list', views.SerieListView.as_view(), name='serie_list'),
-    path('Serie/create', views.SerieCreateView.as_view(), name='serie_create'),
-    path('Serie/<str:pk>', views.SerieDetailView.as_view(), name='serie_detail'),
-    path('Serie/<str:pk>/update', views.SerieUpdateView.as_view(), name='serie_update'),
-    path('Serie/<str:pk>/delete', views.SerieDeleteView.as_view(), name='serie_delete'),
+    path('serie/list', views.SerieListView.as_view(), name='serie_list'),
+    path('serie/create', views.SerieCreateView.as_view(), name='serie_create'),
+    path('serie/<str:pk>', views.SerieDetailView.as_view(), name='serie_detail'),
+    path('serie/<str:pk>/update', views.SerieUpdateView.as_view(), name='serie_update'),
+    path('serie/<str:pk>/delete', views.SerieDeleteView.as_view(), name='serie_delete'),
 ]
