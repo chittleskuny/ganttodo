@@ -1,7 +1,10 @@
 from django.db.models import Q
+from django.contrib.auth import authenticate, login, logout
 from django.http import Http404, HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse, reverse_lazy
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views import generic
 
 from .models import *
@@ -74,7 +77,7 @@ def get_serie_objects():
     return serie_object_list
 
 
-class IndexView(generic.base.TemplateView):
+class IndexView(LoginRequiredMixin, generic.base.TemplateView):
     template_name = 'main/index.html'
 
     def get_context_data(self, *args, **kwargs):
@@ -87,18 +90,35 @@ class IndexView(generic.base.TemplateView):
         return super().get_context_data(**context)
 
 
-def login(request):
-    return render(request, 'main/login.html')
+@login_required
+def accounts_profile(request):
+    print(request.session)
+    return render(request, 'main/accounts_profile.html')
 
 
-def login_submit(request):
+def accounts_login(request):
+    return render(request, 'main/accounts_login.html')
+
+
+def accounts_login_submit(request):
     username = request.POST.get('username').strip()
     password = request.POST.get('password').strip()
 
-    return HttpResponseRedirect(reverse_lazy('main:index'))
+    user = authenticate(request, username=username, password=password)
+    if user is not None:
+        login(request, user)
+        return HttpResponseRedirect(reverse('main:index'))
+    else:
+        return HttpResponseRedirect(reverse('main:accounts_login'))
 
 
-class UserListView(generic.ListView):
+@login_required
+def accounts_logout_submit(request):
+    logout(request)
+    return HttpResponseRedirect(reverse('main:index'))
+
+
+class UserListView(LoginRequiredMixin, generic.ListView):
     model = User
     context_object_name = 'queryset_list'
 
@@ -106,30 +126,30 @@ class UserListView(generic.ListView):
         return User.objects.order_by('id')
 
 
-class UserDetailView(generic.DetailView):
+class UserDetailView(LoginRequiredMixin, generic.DetailView):
     model = User
     context_object_name = 'user'
 
 
-class UserCreateView(generic.CreateView):
+class UserCreateView(LoginRequiredMixin, generic.CreateView):
     model = User
     fields = ['username']
     template_name = 'main/create.html'
 
 
-class UserUpdateView(generic.UpdateView):
+class UserUpdateView(LoginRequiredMixin, generic.UpdateView):
     model = User
     fields = ['username']
     template_name = 'main/update.html'
 
 
-class UserDeleteView(generic.DeleteView):
+class UserDeleteView(LoginRequiredMixin, generic.DeleteView):
     model = User
     template_name = 'main/confirm_delete.html'
     success_url = reverse_lazy('main:user_list')
 
 
-class ProjectListView(generic.ListView):
+class ProjectListView(LoginRequiredMixin, generic.ListView):
     model = Project
     context_object_name = 'queryset_list'
 
@@ -137,30 +157,30 @@ class ProjectListView(generic.ListView):
         return Project.objects.order_by('id')
 
 
-class ProjectDetailView(generic.DetailView):
+class ProjectDetailView(LoginRequiredMixin, generic.DetailView):
     model = Project
     context_object_name = 'project'
 
 
-class ProjectCreateView(generic.CreateView):
+class ProjectCreateView(LoginRequiredMixin, generic.CreateView):
     model = Project
     fields = ['name']
     template_name = 'main/create.html'
 
 
-class ProjectUpdateView(generic.UpdateView):
+class ProjectUpdateView(LoginRequiredMixin, generic.UpdateView):
     model = Project
     fields = ['name']
     template_name = 'main/update.html'
 
 
-class ProjectDeleteView(generic.DeleteView):
+class ProjectDeleteView(LoginRequiredMixin, generic.DeleteView):
     model = Project
     template_name = 'main/confirm_delete.html'
     success_url = reverse_lazy('main:project_list')
 
 
-class TaskListView(generic.ListView):
+class TaskListView(LoginRequiredMixin, generic.ListView):
     model = Task
     context_object_name = 'queryset_list'
 
@@ -168,7 +188,7 @@ class TaskListView(generic.ListView):
         return Task.objects.order_by('id')
 
 
-class TaskDetailView(generic.DetailView):
+class TaskDetailView(LoginRequiredMixin, generic.DetailView):
     model = Task
     context_object_name = 'task'
 
@@ -305,13 +325,13 @@ def task_create_or_update_submit(request):
     return HttpResponseRedirect(reverse('main:task_detail', args=(task_object.pk,)))
 
 
-class TaskDeleteView(generic.DeleteView):
+class TaskDeleteView(LoginRequiredMixin, generic.DeleteView):
     model = Task
     template_name = 'main/confirm_delete.html'
     success_url = reverse_lazy('main:task_list')
 
 
-class TaskPositionListView(generic.ListView):
+class TaskPositionListView(LoginRequiredMixin, generic.ListView):
     model = TaskPosition
     context_object_name = 'queryset_list'
 
@@ -319,30 +339,30 @@ class TaskPositionListView(generic.ListView):
         return TaskPosition.objects.order_by('id')
 
 
-class TaskPositionDetailView(generic.DetailView):
+class TaskPositionDetailView(LoginRequiredMixin, generic.DetailView):
     model = TaskPosition
     context_object_name = 'taskposition'
 
 
-class TaskPositionCreateView(generic.CreateView):
+class TaskPositionCreateView(LoginRequiredMixin, generic.CreateView):
     model = TaskPosition
     fields = ['pre', 'post']
     template_name = 'main/create.html'
 
 
-class TaskPositionUpdateView(generic.UpdateView):
+class TaskPositionUpdateView(LoginRequiredMixin, generic.UpdateView):
     model = TaskPosition
     fields = ['pre', 'post']
     template_name = 'main/update.html'
 
 
-class TaskPositionDeleteView(generic.DeleteView):
+class TaskPositionDeleteView(LoginRequiredMixin, generic.DeleteView):
     model = TaskPosition
     template_name = 'main/confirm_delete.html'
     success_url = reverse_lazy('main:taskposition_list')
 
 
-class CalendarListView(generic.ListView):
+class CalendarListView(LoginRequiredMixin, generic.ListView):
     model = Calendar
     context_object_name = 'queryset_list'
 
@@ -350,30 +370,30 @@ class CalendarListView(generic.ListView):
         return Calendar.objects.order_by('date')
 
 
-class CalendarDetailView(generic.DetailView):
+class CalendarDetailView(LoginRequiredMixin, generic.DetailView):
     model = Calendar
     context_object_name = 'calendar'
 
 
-class CalendarCreateView(generic.CreateView):
+class CalendarCreateView(LoginRequiredMixin, generic.CreateView):
     model = Calendar
     fields = ['date', 'is_holiday']
     template_name = 'main/create.html'
 
 
-class CalendarUpdateView(generic.UpdateView):
+class CalendarUpdateView(LoginRequiredMixin, generic.UpdateView):
     model = Calendar
     fields = ['date', 'is_holiday']
     template_name = 'main/update.html'
 
 
-class CalendarDeleteView(generic.DeleteView):
+class CalendarDeleteView(LoginRequiredMixin, generic.DeleteView):
     model = Calendar
     template_name = 'main/confirm_delete.html'
     success_url = reverse_lazy('main:calendar_list')
 
 
-class SerieListView(generic.ListView):
+class SerieListView(LoginRequiredMixin, generic.ListView):
     model = Serie
     context_object_name = 'queryset_list'
 
@@ -381,24 +401,24 @@ class SerieListView(generic.ListView):
         return Serie.objects.all()
 
 
-class SerieDetailView(generic.DetailView):
+class SerieDetailView(LoginRequiredMixin, generic.DetailView):
     model = Serie
     context_object_name = 'serie'
 
 
-class SerieCreateView(generic.CreateView):
+class SerieCreateView(LoginRequiredMixin, generic.CreateView):
     model = Serie
     fields = ['task', 'start', 'end']
     template_name = 'main/create.html'
 
 
-class SerieUpdateView(generic.UpdateView):
+class SerieUpdateView(LoginRequiredMixin, generic.UpdateView):
     model = Serie
     fields = ['task', 'start', 'end']
     template_name = 'main/update.html'
 
 
-class SerieDeleteView(generic.DeleteView):
+class SerieDeleteView(LoginRequiredMixin, generic.DeleteView):
     model = Serie
     template_name = 'main/confirm_delete.html'
     success_url = reverse_lazy('main:serie_list')

@@ -1,26 +1,36 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>Ganttodo</title>
-    {% load static %}
-    <link rel="shortcut icon" href="{% static 'favicon.ico' %}"/>
-    <link rel="stylesheet" type="text/css" href="{% static 'style.css' %}">
-</head>
-<body>
-    {% block header %}
-        <div>
-            <div class="navi_item"><a href="{% url 'main:index' %}"><p class="navi_item_text">Home</p></a></div>
-            <div class="navi_item"><a href="{% url 'main:user_list' %}"><p class="navi_item_text">Users</p></a></div>
-            <div class="navi_item"><a href="{% url 'main:project_list' %}"><p class="navi_item_text">Projects</p></a></div>
-            <div class="navi_item"><a href="{% url 'main:task_list' %}"><p class="navi_item_text">Tasks</p></a></div>
-            <div class="navi_item"><a href="{% url 'main:taskposition_list' %}"><p class="navi_item_text">TaskPositions</p></a></div>
-            <div class="navi_item"><a href="{% url 'main:calendar_list' %}"><p class="navi_item_text">Calendars</p></a></div>
-            <div class="navi_item"><a href="{% url 'main:serie_list' %}"><p class="navi_item_text">Series</p></a></div>
-            <div class="navi_item"><p class="navi_item_text">About</p></div>
-        </div>
-    {% endblock %}
-    {% block body %}{% endblock %}
-    {% block footer %}{% endblock %}
-    {% block scripts %}{% endblock %}
-</body>
+    <head>
+        <title>Ganttodo</title>
+        {% load static %}
+        <link rel="shortcut icon" href="{% static 'favicon.ico' %}"/>
+        <link rel="stylesheet" type="text/css" href="{% static 'style.css' %}">
+        <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/4.7.0/css/font-awesome.css">
+    </head>
+    <body>
+        {% block header %}
+            <div id="navi">
+                <div id="navi-items">
+                    <div class="navi-item"><a href="{% url 'main:index' %}"><p class="navi-item-text">Home</p></a></div>
+                    <div class="navi-item"><a href="{% url 'main:user_list' %}"><p class="navi-item-text">Users</p></a></div>
+                    <div class="navi-item"><a href="{% url 'main:project_list' %}"><p class="navi-item-text">Projects</p></a></div>
+                    <div class="navi-item"><a href="{% url 'main:task_list' %}"><p class="navi-item-text">Tasks</p></a></div>
+                    <div class="navi-item"><a href="{% url 'main:taskposition_list' %}"><p class="navi-item-text">TaskPositions</p></a></div>
+                    <div class="navi-item"><a href="{% url 'main:calendar_list' %}"><p class="navi-item-text">Calendars</p></a></div>
+                    <div class="navi-item"><a href="{% url 'main:serie_list' %}"><p class="navi-item-text">Series</p></a></div>
+                    <div class="navi-item"><p class="navi-item-text">About</p></div>
+                </div>
+                <div id="navi-user">
+                    <div id="navi-user-icon">
+                        <a href="{% url 'main:accounts_profile' %}">
+                            <i class="fa fa-user-circle-o fa-2x" aria-hidden="true"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% endblock %}
+        {% block body %}{% endblock %}
+        {% block footer %}{% endblock %}
+        {% block scripts %}{% endblock %}
+    </body>
 </html>

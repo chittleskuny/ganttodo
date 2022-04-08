@@ -1,8 +1,7 @@
-{% extends "main/base.html" %}　
+{% extends "main/base.html" %}
 {% block body %}
     <div id="login-container" >
-        <link rel="stylesheet" href="https://cdn.staticfile.org/font-awesome/4.7.0/css/font-awesome.css">
-        <form id="login" action="{% url 'main:login_submit' %}" method="post">{% csrf_token %}
+        <form id="login" action="{% url 'main:accounts_login_submit' %}" method="post">{% csrf_token %}
             <div class="form-item">
                 <span><i class="fa fa-user fa-fw"></i></span>
                 <input type="username" name="username" placeholder="username">

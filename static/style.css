@@ -2,6 +2,10 @@ a {
     text-decoration: none;
 }
 
+i {
+    color: #A1AFC9;
+}
+
 p {
     color: #333333;
     font-family: 'Microsoft YaHei';
@@ -24,19 +28,17 @@ form {
     clear: both;
 }
 
-.navi_item {
+.navi-item {
     float: left;
     width: 12.5%;
     background-color: #293150;
 }
 
-.navi_item_text {
+.navi-item-text {
     color: #A1AFC9;
-    font-size: medium;
-    font-family: 'Microsoft YaHei';
-    font-weight: bold;
-    letter-spacing: 5px;
     text-align: center;
+    font-size: medium;
+    letter-spacing: 1px;
 }
 
 .toolbar_item {
@@ -67,6 +69,26 @@ form {
 
 .task_basic_key_item, .task_basic_value_item {
     height: 25px;
+}
+
+#navi {
+    display: flex;
+    align-items: center;
+}
+
+#navi-items {
+    flex: 1;
+    background-color: #293150;
+}
+
+#navi-user {
+    width: 128px;
+    text-align: center;
+    background-color: #293150;
+}
+
+#navi-user-icon {
+    padding: 12px 0px 9px 0px;
 }
 
 #login-container {

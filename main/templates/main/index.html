@@ -1,76 +1,76 @@
 {% extends "main/base.html" %}
 {% block body %}
-<script src="https://code.highcharts.com/gantt/highcharts-gantt.js"></script>
-<script src="https://code.highcharts.com/gantt/modules/exporting.js"></script>
-<div id="ganttchart"></div>
-<script>
+    <script src="https://code.highcharts.com/gantt/highcharts-gantt.js"></script>
+    <script src="https://code.highcharts.com/gantt/modules/exporting.js"></script>
+    <div id="ganttchart"></div>
+    <script>
 
-    // Set to 00:00:00:000 today
-    var today = new Date()
-    today.setUTCHours(0)
-    today.setUTCMinutes(0)
-    today.setUTCSeconds(0)
-    today.setUTCMilliseconds(0)
-    today = today.getTime()
+        // Set to 00:00:00:000 today
+        var today = new Date()
+        today.setUTCHours(0)
+        today.setUTCMinutes(0)
+        today.setUTCSeconds(0)
+        today.setUTCMilliseconds(0)
+        today = today.getTime()
 
-    var day = 1000 * 60 * 60 * 24
+        var day = 1000 * 60 * 60 * 24
 
-    var seriesObject = JSON.parse('{{ series }}'.replaceAll('&quot;', '"'))
-    console.debug(seriesObject)
+        var seriesObject = JSON.parse('{{ series }}'.replaceAll('&quot;', '"'))
+        console.debug(seriesObject)
 
-    Highcharts.ganttChart('ganttchart', {
-        series: seriesObject,
-        time: {
-            useUTC: false,
-        },
-        title: {
-            text: 'Gantt Project Management'
-        },
-        tooltip: {
-            pointFormatter: function () {
-                var completed = this.options.completed
-                var amount = Highcharts.isObject(completed) ? completed.amount : completed
-                var status = ((amount || 0) * 100) + '%'
+        Highcharts.ganttChart('ganttchart', {
+            series: seriesObject,
+            time: {
+                useUTC: false,
+            },
+            title: {
+                text: 'Gantt Project Management'
+            },
+            tooltip: {
+                pointFormatter: function () {
+                    var completed = this.options.completed
+                    var amount = Highcharts.isObject(completed) ? completed.amount : completed
+                    var status = ((amount || 0) * 100) + '%'
 
-                var lines = [
-                    {
-                        title: 'Start',
-                        value: Highcharts.dateFormat('%Y-%m-%d', this.start)
-                    }, {
-                        visible: !this.options.milestone,
-                        title: 'End',
-                        value: Highcharts.dateFormat('%Y-%m-%d', this.end)
-                    }, {
-                        title: 'Completed',
-                        value: status
-                    }, {
-                        title: 'Assignee',
-                        value: this.options.assignee || 'unassigned'
-                    }
-                ]
+                    var lines = [
+                        {
+                            title: 'Start',
+                            value: Highcharts.dateFormat('%Y-%m-%d', this.start)
+                        }, {
+                            visible: !this.options.milestone,
+                            title: 'End',
+                            value: Highcharts.dateFormat('%Y-%m-%d', this.end)
+                        }, {
+                            title: 'Completed',
+                            value: status
+                        }, {
+                            title: 'Assignee',
+                            value: this.options.assignee || 'unassigned'
+                        }
+                    ]
 
-                return lines.reduce(function (str, line) {
-                    var s = ''
-                    var style = (
-                        Highcharts.defined(line.style) ? line.style : 'font-size: 0.8em'
-                    )
-                    if (line.visible !== false) {
-                        s = (
-                            '<span style="' + style + '">' +
-                            (Highcharts.defined(line.title) ? line.title + ': ' : '') +
-                            (Highcharts.defined(line.value) ? line.value : '') +
-                            '</span><br/>'
+                    return lines.reduce(function (str, line) {
+                        var s = ''
+                        var style = (
+                            Highcharts.defined(line.style) ? line.style : 'font-size: 0.8em'
                         )
-                    }
-                    return str + s
-                }, '')
+                        if (line.visible !== false) {
+                            s = (
+                                '<span style="' + style + '">' +
+                                (Highcharts.defined(line.title) ? line.title + ': ' : '') +
+                                (Highcharts.defined(line.value) ? line.value : '') +
+                                '</span><br/>'
+                            )
+                        }
+                        return str + s
+                    }, '')
+                }
+            },
+            xAxis: {
+                currentDateIndicator: true,
+                max: today + 20 * day,
+                min: today - 5 * day,
             }
-        },
-        xAxis: {
-            currentDateIndicator: true,
-            max: today + 20 * day,
-            min: today - 5 * day,
-        }
-    })
-</script>
+        })
+    </script>
 {% endblock %}
