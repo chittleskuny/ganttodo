@@ -31,7 +31,7 @@ def update_task_objects():
             task_object.save()
 
 
-def get_serie_objects():
+def get_series(user):
     serie_object_dict = {
         '0': {
             'name': 'Others',
@@ -40,15 +40,16 @@ def get_serie_objects():
     }
     for serie_object in Serie.objects.all():
         task_object = serie_object.task
-        serie_project_task_obect = {
-            'id': 'task_%d' % task_object.id,
-            'name': str(task_object),
-            'milestone': task_object.milestone,
-            'assignee': task_object.assignee.username,
-            'status': task_object.status,
-            'start': serie_object.start,
-            'end': serie_object.end - 1000,
-        }
+        if task_object.assignee == user:
+            serie_project_task_obect = {
+                'id': 'task_%d' % task_object.id,
+                'name': str(task_object),
+                'milestone': task_object.milestone,
+                'assignee': task_object.assignee.username,
+                'status': task_object.status,
+                'start': serie_object.start,
+                'end': serie_object.end - 1000,
+            }
 
         project_object = serie_object.task.project
 
@@ -84,15 +85,13 @@ class IndexView(LoginRequiredMixin, generic.base.TemplateView):
         context = {}
 
         update_task_objects()
-        serie_objects = get_serie_objects()
-        context['series'] = json.dumps(serie_objects)
+        context['series'] = json.dumps(get_series(self.request.user))
 
         return super().get_context_data(**context)
 
 
 @login_required
 def accounts_profile(request):
-    print(request.session)
     return render(request, 'main/accounts_profile.html')
 
 
@@ -185,7 +184,7 @@ class TaskListView(LoginRequiredMixin, generic.ListView):
     context_object_name = 'queryset_list'
 
     def get_queryset(self):
-        return Task.objects.order_by('id')
+        return Task.objects.filter(assignee=self.request.user).order_by('id')
 
 
 class TaskDetailView(LoginRequiredMixin, generic.DetailView):
@@ -320,7 +319,7 @@ def task_create_or_update_submit(request):
             taskposition_object.save()
         i = i + 1
 
-    refresh_serie_objects()
+    refresh_serie_objects(request.user)
 
     return HttpResponseRedirect(reverse('main:task_detail', args=(task_object.pk,)))
 
@@ -391,6 +390,37 @@ class CalendarDeleteView(LoginRequiredMixin, generic.DeleteView):
     model = Calendar
     template_name = 'main/confirm_delete.html'
     success_url = reverse_lazy('main:calendar_list')
+
+
+class AlgorithmListView(LoginRequiredMixin, generic.ListView):
+    model = Algorithm
+    context_object_name = 'queryset_list'
+
+    def get_queryset(self):
+        return Algorithm.objects.all()
+
+
+class AlgorithmDetailView(LoginRequiredMixin, generic.DetailView):
+    model = Algorithm
+    context_object_name = 'algorithm'
+
+
+class AlgorithmCreateView(LoginRequiredMixin, generic.CreateView):
+    model = Algorithm
+    fields = ['user', 'code', 'accepted']
+    template_name = 'main/create.html'
+
+
+class AlgorithmUpdateView(LoginRequiredMixin, generic.UpdateView):
+    model = Algorithm
+    fields = ['user', 'code', 'accepted']
+    template_name = 'main/update.html'
+
+
+class AlgorithmDeleteView(LoginRequiredMixin, generic.DeleteView):
+    model = Algorithm
+    template_name = 'main/confirm_delete.html'
+    success_url = reverse_lazy('main:algorithm_list')
 
 
 class SerieListView(LoginRequiredMixin, generic.ListView):
