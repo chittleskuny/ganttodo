@@ -12,12 +12,6 @@ urlpatterns = [
     path('accounts/login/submit', views.accounts_login_submit, name='accounts_login_submit'),
     path('accounts/logout/submit', views.accounts_logout_submit, name='accounts_logout_submit'),
 
-    path('user/list/', views.UserListView.as_view(), name='user_list'),
-    path('user/create/', views.UserCreateView.as_view(), name='user_create'),
-    path('user/<int:pk>/', views.UserDetailView.as_view(), name='user_detail'),
-    path('user/<int:pk>/update/', views.UserUpdateView.as_view(), name='user_update'),
-    path('user/<int:pk>/delete/', views.UserDeleteView.as_view(), name='user_delete'),
-
     path('project/list/', views.ProjectListView.as_view(), name='project_list'),
     path('project/create/', views.ProjectCreateView.as_view(), name='project_create'),
     path('project/<int:pk>/', views.ProjectDetailView.as_view(), name='project_detail'),

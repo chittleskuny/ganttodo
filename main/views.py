@@ -117,37 +117,6 @@ def accounts_logout_submit(request):
     return HttpResponseRedirect(reverse('main:index'))
 
 
-class UserListView(LoginRequiredMixin, generic.ListView):
-    model = User
-    context_object_name = 'queryset_list'
-
-    def get_queryset(self):
-        return User.objects.order_by('id')
-
-
-class UserDetailView(LoginRequiredMixin, generic.DetailView):
-    model = User
-    context_object_name = 'user'
-
-
-class UserCreateView(LoginRequiredMixin, generic.CreateView):
-    model = User
-    fields = ['username']
-    template_name = 'main/create.html'
-
-
-class UserUpdateView(LoginRequiredMixin, generic.UpdateView):
-    model = User
-    fields = ['username']
-    template_name = 'main/update.html'
-
-
-class UserDeleteView(LoginRequiredMixin, generic.DeleteView):
-    model = User
-    template_name = 'main/confirm_delete.html'
-    success_url = reverse_lazy('main:user_list')
-
-
 class ProjectListView(LoginRequiredMixin, generic.ListView):
     model = Project
     context_object_name = 'queryset_list'
