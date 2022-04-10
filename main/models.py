@@ -17,6 +17,15 @@ def convert_date_to_timestamp(date):
 
 
 def convert_timestamp_to_date(timestamp):
+    localtime = time.localtime(timestamp / 1000)
+    return datetime.date(
+        int(time.strftime('%Y', localtime)),
+        int(time.strftime('%m', localtime)),
+        int(time.strftime('%d', localtime)),
+    )
+
+
+def convert_timestamp_to_date_yyyy_mm_dd(timestamp):
     return time.strftime('%Y-%m-%d', time.localtime(timestamp / 1000))
 
 
@@ -118,10 +127,10 @@ class Serie(models.Model):
         return reverse('main:serie_detail', kwargs={'pk': self.pk})
 
     def start_date(self):
-        return convert_timestamp_to_date(self.start)
+        return convert_timestamp_to_date_yyyy_mm_dd(self.start)
 
     def end_date(self):
-        return convert_timestamp_to_date(self.end - 1000)
+        return convert_timestamp_to_date_yyyy_mm_dd(self.end - 1000)
 
     def __str__(self):
         return '#%d [%s, %s] %s' % (self.task.id, self.start_date(), self.end_date(), self.task.title)

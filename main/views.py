@@ -11,6 +11,7 @@ from .models import *
 from .algorithms.default import *
 
 import json
+import chinese_calendar
 
 
 # Create your views here.
@@ -78,6 +79,21 @@ def get_series(user):
     return serie_object_list
 
 
+def more_calendars():
+    last_date = Calendar.objects.last().date
+    i_from = (convert_date_to_timestamp(last_date) - TODAY) // DAY + 1
+    i_to = 100
+    if i_from < i_to:
+        print('More calendars: (%d, %d)' % (i_from, i_to))
+        for i in range(i_from, i_to):
+            i_date = convert_timestamp_to_date(TODAY + DAY * i)
+            calendar_object = Calendar(
+                date = i_date,
+                is_holiday = chinese_calendar.is_holiday(i_date)
+            )
+            calendar_object.save()
+
+
 class IndexView(LoginRequiredMixin, generic.base.TemplateView):
     template_name = 'main/index.html'
 
@@ -92,6 +108,7 @@ class IndexView(LoginRequiredMixin, generic.base.TemplateView):
 
 @login_required
 def accounts_profile(request):
+    more_calendars()
     return render(request, 'main/accounts_profile.html')
 
 
@@ -114,6 +131,11 @@ def accounts_login_submit(request):
 @login_required
 def accounts_logout_submit(request):
     logout(request)
+    return HttpResponseRedirect(reverse('main:index'))
+
+
+def accounts_refresh_submit(request):
+    refresh_serie_objects(request.user)
     return HttpResponseRedirect(reverse('main:index'))
 
 

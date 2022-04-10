@@ -11,6 +11,7 @@ urlpatterns = [
     path('accounts/login/', views.accounts_login, name='accounts_login'),
     path('accounts/login/submit', views.accounts_login_submit, name='accounts_login_submit'),
     path('accounts/logout/submit', views.accounts_logout_submit, name='accounts_logout_submit'),
+    path('accounts/refresh/submit', views.accounts_refresh_submit, name='accounts_refresh_submit'),
 
     path('project/list/', views.ProjectListView.as_view(), name='project_list'),
     path('project/create/', views.ProjectCreateView.as_view(), name='project_create'),

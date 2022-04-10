@@ -2,19 +2,113 @@ from django.db.models import Q
 
 from ..models import *
 
+import logging
+import time, datetime
+
+
+def init_logger():
+    time_str = time.strftime('%Y%m%d_%H%M%S', time.localtime())
+
+    logger = logging.getLogger()
+    format = '%(asctime)s %(levelname)s %(lineno)d %(message)s'
+    logger.setLevel(logging.DEBUG)
+
+    sh = logging.StreamHandler()
+    sh.setFormatter(logging.Formatter(format))
+    sh.setLevel(logging.DEBUG)
+    logger.addHandler(sh)
+
+    # fh = logging.FileHandler('%s.log' % time_str)
+    # fh.setFormatter(logging.Formatter(format))
+    # fh.setLevel(logging.DEBUG)
+    # logger.addHandler(fh)
+
+
+def next_workday(appointed_date=datetime.date.today()):
+    for calendar_object in Calendar.objects.filter(date__gte=appointed_date)[:30]:
+        if not calendar_object.is_holiday:
+            logging.debug('next_workday: %s' % calendar_object.date)
+            return calendar_object.date
+
+    # TODO
+    return appointed_date
+
+
+def compute_actual_cost(start, cost):
+    net_cost = UNIT * cost
+    actual_cost = 0
+    logging.debug('net_cost: %.1f days' % (net_cost / DAY))
+    logging.debug('actual_cost: %.1f days' % (actual_cost / DAY))
+
+    if abs(start - TODAY) % DAY == 0:
+        logging.debug('At zero.')
+    else:
+        logging.debug('Not at zero.')
+        start_day_rest = abs(start - TODAY) % DAY
+        net_cost = net_cost - start_day_rest
+        actual_cost = actual_cost + start_day_rest
+    logging.debug('net_cost: %.1f days' % (net_cost / DAY))
+    logging.debug('actual_cost: %.1f days' % (actual_cost / DAY))
+
+    loop_number = 0
+    while net_cost > 0:
+        loop_number = loop_number + 1
+        logging.debug('loop_number: %d' % loop_number)
+        if loop_number > 10:
+            raise ValueError('Infinite Loop!')
+
+        appointed_date = convert_timestamp_to_date(start + actual_cost)
+        logging.debug('appointed_date: %s' % appointed_date)
+        
+        fetch_days_count = net_cost // DAY + 1
+        logging.debug('fetch_days_count: %d' % fetch_days_count)
+
+        fetch_days = Calendar.objects.filter(date__gte=appointed_date)[:fetch_days_count]
+        for calendar_object in fetch_days:
+
+            if calendar_object.is_holiday:
+                logging.debug('%s is holiday.' % calendar_object.date)
+                actual_cost = actual_cost + DAY
+                logging.debug('net_cost: %.1f days' % (net_cost / DAY))
+                logging.debug('actual_cost: %.1f days' % (actual_cost / DAY))
+
+            else:
+                logging.debug('%s is workday.' % calendar_object.date)
+                if net_cost > DAY:
+                    net_cost = net_cost - DAY
+                    actual_cost = actual_cost + DAY
+                    logging.debug('net_cost: %.1f days' % (net_cost / DAY))
+                    logging.debug('actual_cost: %.1f days' % (actual_cost / DAY))
+                else:
+                    net_cost = 0
+                    actual_cost = actual_cost + net_cost
+                    logging.debug('net_cost: %.1f days' % (net_cost / DAY))
+                    logging.debug('actual_cost: %.1f days' % (actual_cost / DAY))
+                    break
+
+    return actual_cost
+
 
 def new_serie_task_object(user_cur, task_object):
+    logging.debug(task_object)
     serie_task_object = {'task': task_object}
 
     start = user_cur
     if task_object.start is not None:
         start = convert_date_to_timestamp(task_object.start)
+        # TODO if the start day is holiday
+    logging.debug('start: %s' % convert_timestamp_to_date_yyyy_mm_dd(start))
     serie_task_object['start'] = start
 
-    end = start + UNIT * task_object.cost
+    actual_cost = compute_actual_cost(start, task_object.cost)
+    logging.debug('actual_cost: %.1f days' % (actual_cost / DAY))
+
+    end = start + actual_cost
+    logging.debug('end: %s' % convert_timestamp_to_date_yyyy_mm_dd(end))
     serie_task_object['end'] = end
     if end > user_cur:
         user_cur = serie_task_object['end']
+        logging.debug('user_cur: %s' % convert_timestamp_to_date_yyyy_mm_dd(user_cur))
     else:
         pass
         # TODO warning
@@ -140,20 +234,24 @@ def save_new_serie_object(serie_task_objects):
 
 
 def refresh_serie_objects(user):
+    init_logger()
+    logging.info('Refreshing serie objects...')
+
     tic = time.time()
 
-    user_cur = TODAY
+    user_cur = convert_date_to_timestamp(next_workday())
 
     serie_task_objects = []
 
     add_doing_task_objects(user, user_cur, serie_task_objects)
-    # add_should_be_doing_task_objects(user_cur, serie_task_objects)
     add_todo_task_objects(user, user_cur, serie_task_objects)
-    
+
     delete_old_serie_object(user)
     save_new_serie_object(serie_task_objects)
 
     toc = time.time()
     tictoc = toc - tic
-    print('Refreshing serie objects cost %.3fs.' % tictoc)
+    logging.debug('TicToc: %.3fs' % tictoc)
+
+    logging.info('Refreshing serie objects...done.')
     return True
