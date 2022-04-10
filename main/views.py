@@ -51,25 +51,25 @@ def get_series(user):
                 'end': serie_object.end - 1000,
             }
 
-        project_object = serie_object.task.project
+            project_object = serie_object.task.project
 
-        if project_object is not None:
-            if str(project_object.id) not in serie_object_dict:
-                serie_object_dict[str(project_object.id)] = {
-                    'name': project_object.name,
-                    'data': [
-                        {
-                            'id': 'project_%d' % project_object.id,
-                            'name': project_object.name,
-                        }
-                    ],
-                }
-            
-            serie_project_task_obect['parent'] = 'project_%d' % project_object.id,
-            serie_object_dict[str(project_object.id)]['data'].append(serie_project_task_obect)
-        
-        else:
-            serie_object_dict[str(0)]['data'].append(serie_project_task_obect)
+            if project_object is not None:
+                if str(project_object.id) not in serie_object_dict:
+                    serie_object_dict[str(project_object.id)] = {
+                        'name': project_object.name,
+                        'data': [
+                            {
+                                'id': 'project_%d' % project_object.id,
+                                'name': project_object.name,
+                            }
+                        ],
+                    }
+
+                serie_project_task_obect['parent'] = 'project_%d' % project_object.id,
+                serie_object_dict[str(project_object.id)]['data'].append(serie_project_task_obect)
+
+            else:
+                serie_object_dict[str(0)]['data'].append(serie_project_task_obect)
 
     serie_object_list = []
     for key, value in serie_object_dict.items():
@@ -335,7 +335,11 @@ class TaskPositionListView(LoginRequiredMixin, generic.ListView):
     context_object_name = 'queryset_list'
 
     def get_queryset(self):
-        return TaskPosition.objects.order_by('id')
+        pks = []
+        for taskposition_object in TaskPosition.objects.all():
+            if taskposition_object.pre.assignee == self.request.user or taskposition_object.post.assignee == self.request.user:
+                pks.append(taskposition_object.pk)
+        return TaskPosition.objects.filter(pk__in=pks)
 
 
 class TaskPositionDetailView(LoginRequiredMixin, generic.DetailView):
@@ -397,7 +401,7 @@ class AlgorithmListView(LoginRequiredMixin, generic.ListView):
     context_object_name = 'queryset_list'
 
     def get_queryset(self):
-        return Algorithm.objects.all()
+        return Algorithm.objects.filter(user=self.request.user).all()
 
 
 class AlgorithmDetailView(LoginRequiredMixin, generic.DetailView):
