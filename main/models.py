@@ -8,8 +8,9 @@ import datetime, time
 # Create your models here.
 
 
-DAY = 1000 * 60 * 60 * 24
-UNIT = DAY // 2 # TODO
+ONE_DAY = datetime.timedelta(days=1)
+ONE_DAY_TIMESTAMP = 1000 * 60 * 60 * 24
+UNIT = ONE_DAY_TIMESTAMP // 2 # TODO
 
 
 def convert_date_to_timestamp(date):
@@ -29,9 +30,13 @@ def convert_timestamp_to_date_yyyy_mm_dd(timestamp):
     return time.strftime('%Y-%m-%d', time.localtime(timestamp / 1000))
 
 
-TODAY = convert_date_to_timestamp(datetime.date.today())
-NOW = 1000 * int(time.time())
+NOW_TIMESTAMP = 1000 * int(time.time())
 
+TODAY = datetime.date.today()
+TODAY_TIMESTAMP = convert_date_to_timestamp(datetime.date.today())
+
+TOMORROW = TODAY + ONE_DAY
+TOMORROW_TIMESTAMP = TODAY_TIMESTAMP + ONE_DAY_TIMESTAMP
 
 PRIORITY_CHOICE_TUPLE = ((0, '☆☆☆'), (1, '★☆☆'), (2, '★★☆'), (3, '★★★'))
 PRIORITY_CHOICE_LIST = ['☆☆☆', '★☆☆', '★★☆', '★★★']

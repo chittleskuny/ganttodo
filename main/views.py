@@ -21,12 +21,12 @@ def update_task_objects():
     for serie_object in Serie.objects.all():
         task_object = Task.objects.get(pk=serie_object.task.id)
 
-        if serie_object.start <= NOW and task_object.status == STATUS_CHOICE_LIST.index('Todo'):
+        if serie_object.start <= NOW_TIMESTAMP and task_object.status == STATUS_CHOICE_LIST.index('Todo'):
             task_object.start = convert_timestamp_to_date(serie_object.start)
             task_object.status = STATUS_CHOICE_LIST.index('Doing')
             task_object.save()
 
-        if serie_object.end > NOW and task_object.status == STATUS_CHOICE_LIST.index('Doing'):
+        if serie_object.end <= NOW_TIMESTAMP and task_object.status == STATUS_CHOICE_LIST.index('Doing'):
             task_object.start = convert_timestamp_to_date(serie_object.start)
             task_object.cost = task_object.cost + 1
             task_object.save()
@@ -81,12 +81,12 @@ def get_series(user):
 
 def more_calendars():
     last_date = Calendar.objects.last().date
-    i_from = (convert_date_to_timestamp(last_date) - TODAY) // DAY + 1
+    i_from = (convert_date_to_timestamp(last_date) - TODAY_TIMESTAMP) // ONE_DAY_TIMESTAMP + 1
     i_to = 100
     if i_from < i_to:
         print('More calendars: (%d, %d)' % (i_from, i_to))
         for i in range(i_from, i_to):
-            i_date = convert_timestamp_to_date(TODAY + DAY * i)
+            i_date = convert_timestamp_to_date(TODAY_TIMESTAMP + ONE_DAY_TIMESTAMP * i)
             calendar_object = Calendar(
                 date = i_date,
                 is_holiday = chinese_calendar.is_holiday(i_date)

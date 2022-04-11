@@ -24,7 +24,7 @@ def init_logger():
     # logger.addHandler(fh)
 
 
-def next_workday(appointed_date=datetime.date.today()):
+def next_workday(appointed_date=TOMORROW):
     for calendar_object in Calendar.objects.filter(date__gte=appointed_date)[:30]:
         if not calendar_object.is_holiday:
             logging.debug('next_workday: %s' % calendar_object.date)
@@ -35,20 +35,20 @@ def next_workday(appointed_date=datetime.date.today()):
 
 
 def compute_actual_cost(start, cost):
-    net_cost = UNIT * cost
     actual_cost = 0
-    logging.debug('net_cost: %.1f days' % (net_cost / DAY))
-    logging.debug('actual_cost: %.1f days' % (actual_cost / DAY))
+    net_cost = UNIT * cost
+    logging.debug('actual_cost: %.1f days' % (actual_cost / ONE_DAY_TIMESTAMP))
+    logging.debug('net_cost: %.1f days' % (net_cost / ONE_DAY_TIMESTAMP))
 
-    if abs(start - TODAY) % DAY == 0:
+    if abs(start - TODAY_TIMESTAMP) % ONE_DAY_TIMESTAMP == 0:
         logging.debug('At zero.')
     else:
         logging.debug('Not at zero.')
-        start_day_rest = abs(start - TODAY) % DAY
+        start_day_rest = abs(start - TODAY_TIMESTAMP) % ONE_DAY_TIMESTAMP
         net_cost = net_cost - start_day_rest
         actual_cost = actual_cost + start_day_rest
-    logging.debug('net_cost: %.1f days' % (net_cost / DAY))
-    logging.debug('actual_cost: %.1f days' % (actual_cost / DAY))
+        logging.debug('actual_cost: %.1f days' % (actual_cost / ONE_DAY_TIMESTAMP))
+        logging.debug('net_cost: %.1f days' % (net_cost / ONE_DAY_TIMESTAMP))
 
     loop_number = 0
     while net_cost > 0:
@@ -60,7 +60,7 @@ def compute_actual_cost(start, cost):
         appointed_date = convert_timestamp_to_date(start + actual_cost)
         logging.debug('appointed_date: %s' % appointed_date)
         
-        fetch_days_count = net_cost // DAY + 1
+        fetch_days_count = net_cost // ONE_DAY_TIMESTAMP + 1
         logging.debug('fetch_days_count: %d' % fetch_days_count)
 
         fetch_days = Calendar.objects.filter(date__gte=appointed_date)[:fetch_days_count]
@@ -68,22 +68,22 @@ def compute_actual_cost(start, cost):
 
             if calendar_object.is_holiday:
                 logging.debug('%s is holiday.' % calendar_object.date)
-                actual_cost = actual_cost + DAY
-                logging.debug('net_cost: %.1f days' % (net_cost / DAY))
-                logging.debug('actual_cost: %.1f days' % (actual_cost / DAY))
+                actual_cost = actual_cost + ONE_DAY_TIMESTAMP
+                logging.debug('actual_cost: %.1f days' % (actual_cost / ONE_DAY_TIMESTAMP))
+                logging.debug('net_cost: %.1f days' % (net_cost / ONE_DAY_TIMESTAMP))
 
             else:
                 logging.debug('%s is workday.' % calendar_object.date)
-                if net_cost > DAY:
-                    net_cost = net_cost - DAY
-                    actual_cost = actual_cost + DAY
-                    logging.debug('net_cost: %.1f days' % (net_cost / DAY))
-                    logging.debug('actual_cost: %.1f days' % (actual_cost / DAY))
+                if net_cost > ONE_DAY_TIMESTAMP:
+                    actual_cost = actual_cost + ONE_DAY_TIMESTAMP
+                    net_cost = net_cost - ONE_DAY_TIMESTAMP
+                    logging.debug('actual_cost: %.1f days' % (actual_cost / ONE_DAY_TIMESTAMP))
+                    logging.debug('net_cost: %.1f days' % (net_cost / ONE_DAY_TIMESTAMP))
                 else:
-                    net_cost = 0
                     actual_cost = actual_cost + net_cost
-                    logging.debug('net_cost: %.1f days' % (net_cost / DAY))
-                    logging.debug('actual_cost: %.1f days' % (actual_cost / DAY))
+                    net_cost = 0
+                    logging.debug('actual_cost: %.1f days' % (actual_cost / ONE_DAY_TIMESTAMP))
+                    logging.debug('net_cost: %.1f days' % (net_cost / ONE_DAY_TIMESTAMP))
                     break
 
     return actual_cost
@@ -101,7 +101,7 @@ def new_serie_task_object(user_cur, task_object):
     serie_task_object['start'] = start
 
     actual_cost = compute_actual_cost(start, task_object.cost)
-    logging.debug('actual_cost: %.1f days' % (actual_cost / DAY))
+    logging.debug('actual_cost: %.1f days' % (actual_cost / ONE_DAY_TIMESTAMP))
 
     end = start + actual_cost
     logging.debug('end: %s' % convert_timestamp_to_date_yyyy_mm_dd(end))
@@ -113,6 +113,7 @@ def new_serie_task_object(user_cur, task_object):
         pass
         # TODO warning
 
+    logging.debug('serie_task_object: %s' % serie_task_object)
     return user_cur, serie_task_object
 
 
@@ -144,14 +145,25 @@ def get_user_starts(user):
     return user_starts
 
 
+def logging_user_starts(user_starts):
+    user_starts_str_list = []
+    for user_start in user_starts:
+        user_starts_str_list.append(convert_timestamp_to_date_yyyy_mm_dd(user_start))
+    logging.debug('user_starts_str_list: %s' % user_starts_str_list)
+
+
 def get_ready_todo_task_objects(todo_task_objects, taskposition_objects):
     ready_todo_task_objects = []
+    ready_todo_task_objects_str_list = []
     for task_object in todo_task_objects:
         for taskposition_object in taskposition_objects:
             if task_object == taskposition_object.post:
                 continue
         else:
             ready_todo_task_objects.append(task_object)
+            ready_todo_task_objects_str_list.append(str(task_object))
+
+    logging.debug('ready_todo_task_objects: %s' % ready_todo_task_objects_str_list)
     return ready_todo_task_objects
 
 
@@ -166,6 +178,7 @@ def remove_task_object_from_taskposition_objects(task_object, taskposition_objec
 
 def add_todo_task_objects(user, user_cur, serie_task_objects):
     user_starts = get_user_starts(user)
+    logging_user_starts(user_starts)
 
     todo_task_objects = list(
         Task.objects.filter(assignee=user)
@@ -177,7 +190,7 @@ def add_todo_task_objects(user, user_cur, serie_task_objects):
     while todo_task_objects:
         ready_todo_task_objects = get_ready_todo_task_objects(todo_task_objects, taskposition_objects)
         if not ready_todo_task_objects:
-            raise ValueError('Toposorting is failed!')
+            raise ValueError('Toposorting failed!')
 
         choose = None
         candicate = None
@@ -203,13 +216,15 @@ def add_todo_task_objects(user, user_cur, serie_task_objects):
         else:
             choose = candicate
 
+        logging.info('Choose %s.' % choose)
         if choose is None:
             raise ValueError('Cannot continue!')
 
         user_cur, serie_task_object = new_serie_task_object(user_cur, task_object)
 
         if task_object.start is not None:
-            user_starts.remove(user_cur)
+            user_starts.remove(task_object.start)
+            logging_user_starts(user_starts)
         
         serie_task_objects.append(serie_task_object)
 
