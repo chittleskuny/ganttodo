@@ -193,6 +193,7 @@ def task_create(request):
         'priority_choice_list': PRIORITY_CHOICE_LIST,
         'status_choice_list': STATUS_CHOICE_LIST,
         'other_tasks': other_task_objects,
+        'user': request.user,
     })
 
 
@@ -216,6 +217,7 @@ def task_update(request, pk):
         'priority_choice_list': PRIORITY_CHOICE_LIST,
         'status_choice_list': STATUS_CHOICE_LIST,
         'other_tasks': other_task_objects,
+        'user': request.user,
     })
 
 

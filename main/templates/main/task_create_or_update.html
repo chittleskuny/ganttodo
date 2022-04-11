@@ -89,7 +89,7 @@
                     <div id="task_basic_value">
                         <ul>
                             <li class="task_basic_value_item">
-                                <input type="text" name="id" value="{{ task.id }}" readonly="readonly">
+                                <input type="text" name="id" value="{{ task.id }}" readonly="readonly" placeholder="Don't input!">
                             </li>
                             <li class="task_basic_value_item">
                                 <select name="project">
@@ -107,7 +107,7 @@
                                 <input type="text" name="title" value="{{ task.title|default:'' }}">
                             </li>
                             <li class="task_basic_value_item">
-                                <input type="text" name="reference" value="{{ task.reference|default:'' }}">
+                                <input type="text" name="reference" value="{{ task.reference|default:'' }}" placeholder="http://...">
                             </li>
                             <li class="task_basic_value_item">
                                 <input type="checkbox" name="milestone" {% if task.milestone %} checked="checked" {% endif %}>
@@ -124,16 +124,16 @@
                                 </select>
                             </li>
                             <li class="task_basic_value_item">
-                                <input type="text" name="cost" value="{{ task.cost|default:'' }}">
+                                <input type="text" name="cost" value="{{ task.cost|default:'' }}" placeholder="Unit: 0.5 day">
                             </li>
                             <li class="task_basic_value_item">
-                                <input type="text" name="start" value="{{ task.start_yyyy_mm_dd|default:'' }}">
+                                <input type="text" name="start" value="{{ task.start_yyyy_mm_dd|default:'' }}" placeholder="1970-01-01">
                             </li>
                             <li class="task_basic_value_item">
-                                <input type="text" name="deadline" value="{{ task.deadline_yyyy_mm_dd|default:'' }}">
+                                <input type="text" name="deadline" value="{{ task.deadline_yyyy_mm_dd|default:'' }}" placeholder="1970-01-01">
                             </li>
                             <li class="task_basic_value_item">
-                                <input type="text" name="assignee" value="{{ task.assignee|default:'' }}">
+                                <input type="text" name="assignee" value="{{ task.assignee|default:user.username }}">
                             </li>
                             <li class="task_basic_value_item">
                                 <select name="status">
