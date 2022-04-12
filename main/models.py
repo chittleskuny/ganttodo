@@ -2,41 +2,13 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.urls import reverse
 
+from .time_converters import *
+
 import datetime, time
 
 
 # Create your models here.
 
-
-ONE_DAY = datetime.timedelta(days=1)
-ONE_DAY_TIMESTAMP = 1000 * 60 * 60 * 24
-UNIT = ONE_DAY_TIMESTAMP // 2 # TODO
-
-
-def convert_date_to_timestamp(date):
-    return 1000 * int(time.mktime(date.timetuple()))
-
-
-def convert_timestamp_to_date(timestamp):
-    localtime = time.localtime(timestamp / 1000)
-    return datetime.date(
-        int(time.strftime('%Y', localtime)),
-        int(time.strftime('%m', localtime)),
-        int(time.strftime('%d', localtime)),
-    )
-
-
-def convert_timestamp_to_date_yyyy_mm_dd(timestamp):
-    return time.strftime('%Y-%m-%d', time.localtime(timestamp / 1000))
-
-
-NOW_TIMESTAMP = 1000 * int(time.time())
-
-TODAY = datetime.date.today()
-TODAY_TIMESTAMP = convert_date_to_timestamp(datetime.date.today())
-
-TOMORROW = TODAY + ONE_DAY
-TOMORROW_TIMESTAMP = TODAY_TIMESTAMP + ONE_DAY_TIMESTAMP
 
 PRIORITY_CHOICE_TUPLE = ((0, '☆☆☆'), (1, '★☆☆'), (2, '★★☆'), (3, '★★★'))
 PRIORITY_CHOICE_LIST = ['☆☆☆', '★☆☆', '★★☆', '★★★']
@@ -65,19 +37,19 @@ class Task(models.Model):
     milestone = models.BooleanField(default=False, blank=False, null=False)
     priority = models.IntegerField(default=0, blank=False, null=False, choices=PRIORITY_CHOICE_TUPLE)
     cost = models.IntegerField(default=0, blank=False, null=False)
-    start = models.DateField(default=None, blank=True, null=True)
-    deadline = models.DateField(default=None, blank=True, null=True)
+    start = models.DateTimeField(default=None, blank=True, null=True)
+    deadline = models.DateTimeField(default=None, blank=True, null=True)
     assignee = models.ForeignKey(User, default=None, blank=True, null=True, on_delete=models.CASCADE)
     status = models.IntegerField(default=0, blank=False, null=False, choices=STATUS_CHOICE_TUPLE)
 
     def get_absolute_url(self):
         return reverse('main:task_detail', kwargs={'pk': self.pk})
 
-    def start_yyyy_mm_dd(self):
-        return '' if self.start is None else str(self.start)
+    def start_timestr_yyyy_mm_dd(self):
+        return '' if self.start is None else convert_datetime_to_timestr_yyyy_mm_dd_fraction(self.start)
 
-    def deadline_yyyy_mm_dd(self):
-        return '' if self.deadline is None else str(self.deadline)
+    def deadline_timestr_yyyy_mm_dd(self):
+        return '' if self.deadline is None else convert_datetime_to_timestr_yyyy_mm_dd_fraction(self.deadline)
 
     def __str__(self):
         return '#%d %s' % (self.id, self.title)
@@ -102,7 +74,7 @@ class Calendar(models.Model):
     def get_absolute_url(self):
         return reverse('main:calendar_detail', kwargs={'pk': self.pk})
 
-    def date_yyyy_mm_dd(self):
+    def date_timestr_yyyy_mm_dd(self):
         return str(self.date)
 
     def __str__(self):
@@ -131,11 +103,17 @@ class Serie(models.Model):
     def get_absolute_url(self):
         return reverse('main:serie_detail', kwargs={'pk': self.pk})
 
-    def start_date(self):
-        return convert_timestamp_to_date_yyyy_mm_dd(self.start)
+    def start_timestr_yyyy_mm_dd_fraction(self):
+        return convert_timestamp_to_timestr_yyyy_mm_dd_fraction(self.start)
 
-    def end_date(self):
-        return convert_timestamp_to_date_yyyy_mm_dd(self.end - 1000)
+    def end_timestr_yyyy_mm_dd_fraction(self):
+        return convert_timestamp_to_timestr_yyyy_mm_dd_fraction(self.end - 1000)
 
     def __str__(self):
-        return '#%d [%s, %s] %s' % (self.task.id, self.start_date(), self.end_date(), self.task.title)
+        return '#%d [%s, %s] %s => %s' % (
+            self.task.id,
+            self.start_timestr_yyyy_mm_dd_fraction(),
+            self.end_timestr_yyyy_mm_dd_fraction(),
+            self.task.title,
+            self.task.assignee,
+        )

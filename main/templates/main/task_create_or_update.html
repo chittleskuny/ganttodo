@@ -127,10 +127,10 @@
                                 <input type="text" name="cost" value="{{ task.cost|default:'' }}" placeholder="Unit: 0.5 day">
                             </li>
                             <li class="task_basic_value_item">
-                                <input type="text" name="start" value="{{ task.start_yyyy_mm_dd|default:'' }}" placeholder="1970-01-01">
+                                <input type="text" name="start" value="{{ task.start_timestr_yyyy_mm_dd|default:'' }}" placeholder="1970-01-01 1/2">
                             </li>
                             <li class="task_basic_value_item">
-                                <input type="text" name="deadline" value="{{ task.deadline_yyyy_mm_dd|default:'' }}" placeholder="1970-01-01">
+                                <input type="text" name="deadline" value="{{ task.deadline_timestr_yyyy_mm_dd|default:'' }}" placeholder="1970-01-01 1/2">
                             </li>
                             <li class="task_basic_value_item">
                                 <input type="text" name="assignee" value="{{ task.assignee|default:user.username }}">

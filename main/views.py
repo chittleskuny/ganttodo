@@ -10,6 +10,7 @@ from django.views import generic
 from .models import *
 from .algorithms.default import *
 
+import re
 import json
 import chinese_calendar
 
@@ -17,18 +18,33 @@ import chinese_calendar
 # Create your views here.
 
 
-def update_task_objects():
+def next_cost_mark():
+    cost_mark = convert_datetime_to_timestamp(datetime.date.today())
+    now_timestamp = convert_datetime_to_timestamp(datetime.datetime.now())
+    while cost_mark <= now_timestamp:
+        cost_mark = cost_mark + UNIT
+    return cost_mark
+
+
+def update_task_objects(user):
+    now_timestamp = convert_datetime_to_timestamp(datetime.datetime.now())
+
+    refresh = False
     for serie_object in Serie.objects.all():
         task_object = Task.objects.get(pk=serie_object.task.id)
-
-        if serie_object.start <= NOW_TIMESTAMP and task_object.status == STATUS_CHOICE_LIST.index('Todo'):
-            task_object.start = convert_timestamp_to_date(serie_object.start)
-            task_object.status = STATUS_CHOICE_LIST.index('Doing')
+        if serie_object.end <= now_timestamp and task_object.status == STATUS_CHOICE_LIST.index('Doing'):
+            task_object.cost = (next_cost_mark() - serie_object.start) / UNIT
             task_object.save()
+            refresh = True
 
-        if serie_object.end <= NOW_TIMESTAMP and task_object.status == STATUS_CHOICE_LIST.index('Doing'):
-            task_object.start = convert_timestamp_to_date(serie_object.start)
-            task_object.cost = task_object.cost + 1
+    if refresh:
+        refresh_serie_objects(user)
+
+    for serie_object in Serie.objects.all():
+        task_object = Task.objects.get(pk=serie_object.task.id)
+        if serie_object.start <= now_timestamp and task_object.status == STATUS_CHOICE_LIST.index('Todo'):
+            task_object.start = convert_timestamp_to_datetime(serie_object.start)
+            task_object.status = STATUS_CHOICE_LIST.index('Doing')
             task_object.save()
 
 
@@ -81,12 +97,15 @@ def get_series(user):
 
 def more_calendars():
     last_date = Calendar.objects.last().date
-    i_from = (convert_date_to_timestamp(last_date) - TODAY_TIMESTAMP) // ONE_DAY_TIMESTAMP + 1
+
+    today_timestamp = convert_datetime_to_timestamp(datetime.datetime.today())
+    i_from = (convert_datetime_to_timestamp(last_date) - today_timestamp) // ONE_DAY_TIMESTAMP + 1
     i_to = 100
+
     if i_from < i_to:
         print('More calendars: (%d, %d)' % (i_from, i_to))
         for i in range(i_from, i_to):
-            i_date = convert_timestamp_to_date(TODAY_TIMESTAMP + ONE_DAY_TIMESTAMP * i)
+            i_date = convert_timestamp_to_datetime(today_timestamp + ONE_DAY_TIMESTAMP * i)
             calendar_object = Calendar(
                 date = i_date,
                 is_holiday = chinese_calendar.is_holiday(i_date)
@@ -100,7 +119,7 @@ class IndexView(LoginRequiredMixin, generic.base.TemplateView):
     def get_context_data(self, *args, **kwargs):
         context = {}
 
-        update_task_objects()
+        update_task_objects(self.request.user)
         context['series'] = json.dumps(get_series(self.request.user))
 
         return super().get_context_data(**context)
@@ -259,8 +278,23 @@ def task_create_or_update_submit(request):
     if milestone:
         cost = 0
 
-    start = None if start == '' else start
-    deadline = None if deadline == '' else deadline
+    start_datetime = None
+    if start != '':
+        m0 = re.match('([0-9]{4})-([0-9]{2})-([0-9]{2})', start)
+        if m0:
+            start_datetime = datetime.strptime(start, '%Y-%m-%d')
+        m1 = re.match('([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]+)/%d' % RESOLUTION, start)
+        if m1:
+            start_datetime.hour = 24 // RESOLUTION * m1.group(4)
+
+    deadline_datetime = None
+    if deadline != '':
+        m0 = re.match('([0-9]{4})-([0-9]{2})-([0-9]{2})', deadline)
+        if m0:
+            deadline_datetime = datetime.strptime(deadline, '%Y-%m-%d')
+        m1 = re.match('([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]+)/%d' % RESOLUTION, deadline)
+        if m1:
+            deadline_datetime.hour = 24 // RESOLUTION * m1.group(4)
 
     assignee = None if assignee == '' else User.objects.get(username=assignee)
 
@@ -277,8 +311,8 @@ def task_create_or_update_submit(request):
             milestone = milestone,
             priority = priority,
             cost = cost,
-            start = start,
-            deadline = deadline,
+            start = start_datetime,
+            deadline = deadline_datetime,
             assignee = assignee,
             status = status,
         )
@@ -290,8 +324,8 @@ def task_create_or_update_submit(request):
         task_object.milestone = milestone
         task_object.priority = priority
         task_object.cost = cost
-        task_object.start = start
-        task_object.deadline = deadline
+        task_object.start = start_datetime
+        task_object.deadline = deadline_datetime
         task_object.assignee = assignee
         task_object.status = status
     task_object.save()

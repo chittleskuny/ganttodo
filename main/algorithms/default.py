@@ -7,8 +7,6 @@ import time, datetime
 
 
 def init_logger():
-    time_str = time.strftime('%Y%m%d_%H%M%S', time.localtime())
-
     logger = logging.getLogger()
     format = '%(asctime)s %(levelname)s %(lineno)d %(message)s'
     logger.setLevel(logging.DEBUG)
@@ -18,20 +16,15 @@ def init_logger():
     sh.setLevel(logging.DEBUG)
     logger.addHandler(sh)
 
-    # fh = logging.FileHandler('%s.log' % time_str)
-    # fh.setFormatter(logging.Formatter(format))
-    # fh.setLevel(logging.DEBUG)
-    # logger.addHandler(fh)
 
-
-def next_workday(appointed_date=TOMORROW):
-    for calendar_object in Calendar.objects.filter(date__gte=appointed_date)[:30]:
+def next_workday(appointed_timetuple=datetime.datetime.now()):
+    for calendar_object in Calendar.objects.filter(date__gte=appointed_timetuple)[:30]:
         if not calendar_object.is_holiday:
             logging.debug('next_workday: %s' % calendar_object.date)
             return calendar_object.date
 
     # TODO
-    return appointed_date
+    return appointed_timetuple
 
 
 def compute_actual_cost(start, cost):
@@ -40,11 +33,12 @@ def compute_actual_cost(start, cost):
     logging.debug('actual_cost: %.1f days' % (actual_cost / ONE_DAY_TIMESTAMP))
     logging.debug('net_cost: %.1f days' % (net_cost / ONE_DAY_TIMESTAMP))
 
-    if abs(start - TODAY_TIMESTAMP) % ONE_DAY_TIMESTAMP == 0:
+    today_timestamp = convert_datetime_to_timestamp(datetime.date.today())
+    if abs(start - today_timestamp) % ONE_DAY_TIMESTAMP == 0:
         logging.debug('At zero.')
     else:
         logging.debug('Not at zero.')
-        start_day_rest = abs(start - TODAY_TIMESTAMP) % ONE_DAY_TIMESTAMP
+        start_day_rest = abs(start - today_timestamp) % ONE_DAY_TIMESTAMP
         net_cost = net_cost - start_day_rest
         actual_cost = actual_cost + start_day_rest
         logging.debug('actual_cost: %.1f days' % (actual_cost / ONE_DAY_TIMESTAMP))
@@ -57,7 +51,7 @@ def compute_actual_cost(start, cost):
         if loop_number > 10:
             raise ValueError('Infinite Loop!')
 
-        appointed_date = convert_timestamp_to_date(start + actual_cost)
+        appointed_date = convert_timestamp_to_datetime(start + actual_cost)
         logging.debug('appointed_date: %s' % appointed_date)
         
         fetch_days_count = net_cost // ONE_DAY_TIMESTAMP + 1
@@ -95,20 +89,20 @@ def new_serie_task_object(user_cur, task_object):
 
     start = user_cur
     if task_object.start is not None:
-        start = convert_date_to_timestamp(task_object.start)
+        start = convert_datetime_to_timestamp(task_object.start)
         # TODO if the start day is holiday
-    logging.debug('start: %s' % convert_timestamp_to_date_yyyy_mm_dd(start))
+    logging.debug('start: %s' % convert_timestamp_to_timestr_yyyy_mm_dd_fraction(start))
     serie_task_object['start'] = start
 
     actual_cost = compute_actual_cost(start, task_object.cost)
     logging.debug('actual_cost: %.1f days' % (actual_cost / ONE_DAY_TIMESTAMP))
 
     end = start + actual_cost
-    logging.debug('end: %s' % convert_timestamp_to_date_yyyy_mm_dd(end))
+    logging.debug('end: %s' % convert_timestamp_to_timestr_yyyy_mm_dd_fraction(end))
     serie_task_object['end'] = end
     if end > user_cur:
         user_cur = serie_task_object['end']
-        logging.debug('user_cur: %s' % convert_timestamp_to_date_yyyy_mm_dd(user_cur))
+        logging.debug('user_cur: %s' % convert_timestamp_to_timestr_yyyy_mm_dd_fraction(user_cur))
     else:
         pass
         # TODO warning
@@ -138,7 +132,7 @@ def get_user_starts(user):
                     .order_by('start')
     )
     for task_object in task_objects:
-        start = convert_date_to_timestamp(task_object.start)
+        start = convert_datetime_to_timestamp(task_object.start)
         user_starts.append(start)
 
     user_starts.sort()
@@ -148,7 +142,7 @@ def get_user_starts(user):
 def logging_user_starts(user_starts):
     user_starts_str_list = []
     for user_start in user_starts:
-        user_starts_str_list.append(convert_timestamp_to_date_yyyy_mm_dd(user_start))
+        user_starts_str_list.append(convert_timestamp_to_timestr_yyyy_mm_dd_fraction(user_start))
     logging.debug('user_starts_str_list: %s' % user_starts_str_list)
 
 
@@ -254,7 +248,7 @@ def refresh_serie_objects(user):
 
     tic = time.time()
 
-    user_cur = convert_date_to_timestamp(next_workday())
+    user_cur = convert_datetime_to_timestamp(next_workday())
 
     serie_task_objects = []
 
