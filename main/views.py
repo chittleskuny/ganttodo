@@ -12,6 +12,7 @@ from .algorithms.default import *
 
 import re
 import json
+import logging
 import chinese_calendar
 
 
@@ -19,33 +20,56 @@ import chinese_calendar
 
 
 def next_cost_mark():
-    cost_mark = convert_datetime_to_timestamp(datetime.date.today())
-    now_timestamp = convert_datetime_to_timestamp(datetime.datetime.now())
+    cost_mark = convert_datetime_to_timestamp(date.today())
+    now_timestamp = convert_datetime_to_timestamp(datetime.now())
     while cost_mark <= now_timestamp:
         cost_mark = cost_mark + UNIT
     return cost_mark
 
 
 def update_task_objects(user):
-    now_timestamp = convert_datetime_to_timestamp(datetime.datetime.now())
+    now_timestamp = convert_datetime_to_timestamp(datetime.now())
 
     refresh = False
-    for serie_object in Serie.objects.all():
+
+    doing_serie_objects = list(Serie.objects
+        .filter(task__assignee=user)
+        .filter(task__status=STATUS_CHOICE_LIST.index('Doing'))
+        .filter(end__lte=now_timestamp)
+    )
+    for serie_object in doing_serie_objects:
+        logging.debug('serie_object: %s' % serie_object)
+
         task_object = Task.objects.get(pk=serie_object.task.id)
-        if serie_object.end <= now_timestamp and task_object.status == STATUS_CHOICE_LIST.index('Doing'):
-            task_object.cost = (next_cost_mark() - serie_object.start) / UNIT
-            task_object.save()
-            refresh = True
+        logging.debug('task_object: %s' % task_object)
+
+        task_object.cost = (next_cost_mark() - serie_object.start) // UNIT
+        task_object.save()
+
+        refresh = True
+        logging.debug('refresh: %s' % refresh)
 
     if refresh:
+
         refresh_serie_objects(user)
 
-    for serie_object in Serie.objects.all():
-        task_object = Task.objects.get(pk=serie_object.task.id)
-        if serie_object.start <= now_timestamp and task_object.status == STATUS_CHOICE_LIST.index('Todo'):
-            task_object.start = convert_timestamp_to_datetime(serie_object.start)
-            task_object.status = STATUS_CHOICE_LIST.index('Doing')
-            task_object.save()
+    else:
+
+        todo_serie_objects = list(Serie.objects
+            .filter(task__assignee=user)
+            .filter(task__status=STATUS_CHOICE_LIST.index('Todo'))
+            .filter(start__lte=now_timestamp)
+        )
+        for serie_object in todo_serie_objects:
+            logging.debug('serie_object: %s' % serie_object)
+
+            task_object = Task.objects.get(pk=serie_object.task.id)
+            logging.debug('task_object: %s' % task_object)
+            
+            if serie_object.start <= now_timestamp and task_object.status == STATUS_CHOICE_LIST.index('Todo'):
+                task_object.start = convert_timestamp_to_datetime(serie_object.start)
+                task_object.status = STATUS_CHOICE_LIST.index('Doing')
+                task_object.save()
 
 
 def get_series(user):
@@ -98,7 +122,7 @@ def get_series(user):
 def more_calendars():
     last_date = Calendar.objects.last().date
 
-    today_timestamp = convert_datetime_to_timestamp(datetime.datetime.today())
+    today_timestamp = convert_datetime_to_timestamp(datetime.today())
     i_from = (convert_datetime_to_timestamp(last_date) - today_timestamp) // ONE_DAY_TIMESTAMP + 1
     i_to = 100
 
@@ -282,7 +306,7 @@ def task_create_or_update_submit(request):
     if start != '':
         m0 = re.match('([0-9]{4})-([0-9]{2})-([0-9]{2})', start)
         if m0:
-            start_datetime = datetime.strptime(start, '%Y-%m-%d')
+            start_datetime = convert_timestr_yyyy_mm_dd_to_datetime(start)
         m1 = re.match('([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]+)/%d' % RESOLUTION, start)
         if m1:
             start_datetime.hour = 24 // RESOLUTION * m1.group(4)
@@ -291,7 +315,7 @@ def task_create_or_update_submit(request):
     if deadline != '':
         m0 = re.match('([0-9]{4})-([0-9]{2})-([0-9]{2})', deadline)
         if m0:
-            deadline_datetime = datetime.strptime(deadline, '%Y-%m-%d')
+            deadline_datetime = convert_timestr_yyyy_mm_dd_to_datetime(deadline)
         m1 = re.match('([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]+)/%d' % RESOLUTION, deadline)
         if m1:
             deadline_datetime.hour = 24 // RESOLUTION * m1.group(4)

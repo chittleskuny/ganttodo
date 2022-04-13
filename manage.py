@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 """Django's command-line utility for administrative tasks."""
+from logger import *
+
 import os
 import sys
 
@@ -19,4 +21,5 @@ def main():
 
 
 if __name__ == '__main__':
+    init_logger()
     main()

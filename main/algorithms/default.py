@@ -2,29 +2,21 @@ from django.db.models import Q
 
 from ..models import *
 
+from time import time, mktime, strftime, strptime, localtime
+from datetime import date, datetime, timedelta
+
 import logging
-import time, datetime
 
 
-def init_logger():
-    logger = logging.getLogger()
-    format = '%(asctime)s %(levelname)s %(lineno)d %(message)s'
-    logger.setLevel(logging.DEBUG)
-
-    sh = logging.StreamHandler()
-    sh.setFormatter(logging.Formatter(format))
-    sh.setLevel(logging.DEBUG)
-    logger.addHandler(sh)
-
-
-def next_workday(appointed_timetuple=datetime.datetime.now()):
-    for calendar_object in Calendar.objects.filter(date__gte=appointed_timetuple)[:30]:
+def next_workday(appointed_datetime=datetime.now()):
+    next_day = appointed_datetime + ONE_DAY
+    for calendar_object in Calendar.objects.filter(date__gte=next_day)[:30]:
         if not calendar_object.is_holiday:
-            logging.debug('next_workday: %s' % calendar_object.date)
+            logging.debug('next_workday after %s: %s' % (appointed_datetime, calendar_object.date))
             return calendar_object.date
 
     # TODO
-    return appointed_timetuple
+    return appointed_datetime
 
 
 def compute_actual_cost(start, cost):
@@ -33,7 +25,7 @@ def compute_actual_cost(start, cost):
     logging.debug('actual_cost: %.1f days' % (actual_cost / ONE_DAY_TIMESTAMP))
     logging.debug('net_cost: %.1f days' % (net_cost / ONE_DAY_TIMESTAMP))
 
-    today_timestamp = convert_datetime_to_timestamp(datetime.date.today())
+    today_timestamp = convert_datetime_to_timestamp(date.today())
     if abs(start - today_timestamp) % ONE_DAY_TIMESTAMP == 0:
         logging.debug('At zero.')
     else:
@@ -125,11 +117,11 @@ def add_doing_task_objects(user, user_cur, serie_task_objects):
 def get_user_starts(user):
     user_starts = []
 
-    task_objects = list(
-        Task.objects.filter(~Q(start=None))
-                    .filter(assignee=user)
-                    .filter(status=STATUS_CHOICE_LIST.index('Todo'))
-                    .order_by('start')
+    task_objects = list(Task.objects
+        .filter(~Q(start=None))
+        .filter(assignee=user)
+        .filter(status=STATUS_CHOICE_LIST.index('Todo'))
+        .order_by('start')
     )
     for task_object in task_objects:
         start = convert_datetime_to_timestamp(task_object.start)
@@ -152,7 +144,7 @@ def get_ready_todo_task_objects(todo_task_objects, taskposition_objects):
     for task_object in todo_task_objects:
         for taskposition_object in taskposition_objects:
             if task_object == taskposition_object.post:
-                continue
+                break
         else:
             ready_todo_task_objects.append(task_object)
             ready_todo_task_objects_str_list.append(str(task_object))
@@ -174,10 +166,10 @@ def add_todo_task_objects(user, user_cur, serie_task_objects):
     user_starts = get_user_starts(user)
     logging_user_starts(user_starts)
 
-    todo_task_objects = list(
-        Task.objects.filter(assignee=user)
-                    .filter(status=STATUS_CHOICE_LIST.index('Todo'))
-                    .order_by('-priority')
+    todo_task_objects = list(Task.objects
+        .filter(assignee=user)
+        .filter(status=STATUS_CHOICE_LIST.index('Todo'))
+        .order_by('-priority')
     )
     taskposition_objects = list(TaskPosition.objects.all())
 
@@ -243,10 +235,9 @@ def save_new_serie_object(serie_task_objects):
 
 
 def refresh_serie_objects(user):
-    init_logger()
     logging.info('Refreshing serie objects...')
 
-    tic = time.time()
+    tic = time()
 
     user_cur = convert_datetime_to_timestamp(next_workday())
 
@@ -258,7 +249,7 @@ def refresh_serie_objects(user):
     delete_old_serie_object(user)
     save_new_serie_object(serie_task_objects)
 
-    toc = time.time()
+    toc = time()
     tictoc = toc - tic
     logging.debug('TicToc: %.3fs' % tictoc)
 
