@@ -39,7 +39,7 @@
                         }, {
                             visible: !this.options.milestone,
                             title: 'End',
-                            value: Highcharts.dateFormat('%Y-%m-%d', this.end)
+                            value: Highcharts.dateFormat('%Y-%m-%d', this.end - 1000)
                         }, {
                             title: 'Completed',
                             value: status
@@ -68,8 +68,8 @@
             },
             xAxis: {
                 currentDateIndicator: true,
-                max: today + 20 * day,
-                min: today - 5 * day,
+                max: today + 27 * day,
+                min: today - 3 * day,
             }
         })
     </script>

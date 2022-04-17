@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 from django.db import models
 from django.urls import reverse
 
-from .time_converters import *
+from .clocks import *
 
 import datetime, time
 
@@ -107,7 +107,7 @@ class Serie(models.Model):
         return convert_timestamp_to_timestr_yyyy_mm_dd_fraction(self.start)
 
     def end_timestr_yyyy_mm_dd_fraction(self):
-        return convert_timestamp_to_timestr_yyyy_mm_dd_fraction(self.end - 1000)
+        return convert_timestamp_to_timestr_yyyy_mm_dd_fraction(self.end, ZERO_LEFT)
 
     def __str__(self):
         return '#%d [%s, %s] %s => %s' % (

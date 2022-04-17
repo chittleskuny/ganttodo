@@ -23,7 +23,7 @@ def next_cost_mark():
     cost_mark = convert_datetime_to_timestamp(date.today())
     now_timestamp = convert_datetime_to_timestamp(datetime.now())
     while cost_mark <= now_timestamp:
-        cost_mark = cost_mark + UNIT
+        cost_mark = cost_mark + UNIT_TIMESTAMP
     return cost_mark
 
 
@@ -43,11 +43,11 @@ def update_task_objects(user):
         task_object = Task.objects.get(pk=serie_object.task.id)
         logging.debug('task_object: %s' % task_object)
 
-        task_object.cost = (next_cost_mark() - serie_object.start) // UNIT
+        task_object.cost = (next_cost_mark() - serie_object.start) // UNIT_TIMESTAMP
         task_object.save()
 
         refresh = True
-        logging.debug('refresh: %s' % refresh)
+        logging.debug('Need to refresh.')
 
     if refresh:
 
@@ -127,7 +127,7 @@ def more_calendars():
     i_to = 100
 
     if i_from < i_to:
-        print('More calendars: (%d, %d)' % (i_from, i_to))
+        logging.info('More calendars: (%d, %d)' % (i_from, i_to))
         for i in range(i_from, i_to):
             i_date = convert_timestamp_to_datetime(today_timestamp + ONE_DAY_TIMESTAMP * i)
             calendar_object = Calendar(
@@ -304,21 +304,33 @@ def task_create_or_update_submit(request):
 
     start_datetime = None
     if start != '':
-        m0 = re.match('([0-9]{4})-([0-9]{2})-([0-9]{2})', start)
+        m0 = re.match('([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]+)/%d' % RESOLUTION, start)
         if m0:
-            start_datetime = convert_timestr_yyyy_mm_dd_to_datetime(start)
-        m1 = re.match('([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]+)/%d' % RESOLUTION, start)
-        if m1:
-            start_datetime.hour = 24 // RESOLUTION * m1.group(4)
+            start_datetime = datetime(
+                year = int(m0.group(1)),
+                month = int(m0.group(2)),
+                day = int(m0.group(3)),
+                hour = 24 // RESOLUTION * int(m0.group(4)),
+            )
+        else:
+            m1 = re.match('([0-9]{4})-([0-9]{2})-([0-9]{2})', start)
+            if m1:
+                start_datetime = convert_timestr_yyyy_mm_dd_to_datetime(start)
 
     deadline_datetime = None
     if deadline != '':
-        m0 = re.match('([0-9]{4})-([0-9]{2})-([0-9]{2})', deadline)
+        m0 = re.match('([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]+)/%d' % RESOLUTION, deadline)
         if m0:
-            deadline_datetime = convert_timestr_yyyy_mm_dd_to_datetime(deadline)
-        m1 = re.match('([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]+)/%d' % RESOLUTION, deadline)
-        if m1:
-            deadline_datetime.hour = 24 // RESOLUTION * m1.group(4)
+            deadline_datetime = datetime(
+                year = int(m0.group(1)),
+                month = int(m0.group(2)),
+                day = int(m0.group(3)),
+                hour = 24 // RESOLUTION * int(m0.group(4)),
+            )
+        else:
+            m1 = re.match('([0-9]{4})-([0-9]{2})-([0-9]{2})', deadline)
+            if m1:
+                deadline_datetime = convert_timestr_yyyy_mm_dd_to_datetime(deadline)
 
     assignee = None if assignee == '' else User.objects.get(username=assignee)
 

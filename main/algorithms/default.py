@@ -8,6 +8,28 @@ from datetime import date, datetime, timedelta
 import logging
 
 
+def get_timestamp_before(appointed_datetime=datetime.now()):
+    appointed_timestamp = convert_datetime_to_timestamp(appointed_datetime)
+    today_timestamp = convert_datetime_to_timestamp(date.today())
+    timestamp_before = abs(appointed_timestamp - today_timestamp) % ONE_DAY_TIMESTAMP
+    logging.debug('timestamp_before: %d' % timestamp_before)
+    return timestamp_before
+
+
+def get_next_unit_index(appointed_datetime=datetime.now()):
+    timestamp_before = get_timestamp_before(appointed_datetime)
+    i = 0
+    while timestamp_before > UNIT_TIMESTAMPS[i]:
+        i = i + 1
+    logging.debug('next_unit_index: %d' % i)
+    return i
+
+
+def get_next_unit_timestamp(appointed_datetime=datetime.now()):
+    next_unit_index = get_next_unit_index(appointed_datetime)
+    return next_unit_index * UNIT_TIMESTAMP
+
+
 def next_workday(appointed_datetime=datetime.now()):
     next_day = appointed_datetime + ONE_DAY
     for calendar_object in Calendar.objects.filter(date__gte=next_day)[:30]:
@@ -19,22 +41,30 @@ def next_workday(appointed_datetime=datetime.now()):
     return appointed_datetime
 
 
-def compute_actual_cost(start, cost):
-    actual_cost = 0
-    net_cost = UNIT * cost
-    logging.debug('actual_cost: %.1f days' % (actual_cost / ONE_DAY_TIMESTAMP))
-    logging.debug('net_cost: %.1f days' % (net_cost / ONE_DAY_TIMESTAMP))
+def compute_actual_cost(start, cost, status):
+    next_unit_timestamp = get_next_unit_timestamp()
 
-    today_timestamp = convert_datetime_to_timestamp(date.today())
-    if abs(start - today_timestamp) % ONE_DAY_TIMESTAMP == 0:
-        logging.debug('At zero.')
-    else:
-        logging.debug('Not at zero.')
-        start_day_rest = abs(start - today_timestamp) % ONE_DAY_TIMESTAMP
-        net_cost = net_cost - start_day_rest
-        actual_cost = actual_cost + start_day_rest
-        logging.debug('actual_cost: %.1f days' % (actual_cost / ONE_DAY_TIMESTAMP))
-        logging.debug('net_cost: %.1f days' % (net_cost / ONE_DAY_TIMESTAMP))
+    actual_cost = 0
+    if status == 'Doing':
+        today_timestamp = convert_datetime_to_timestamp(date.today())
+        actual_cost = today_timestamp + next_unit_timestamp - start
+    logging.debug('actual_cost: %.1f days' % (actual_cost / ONE_DAY_TIMESTAMP))
+
+    net_cost = UNIT_TIMESTAMP * cost
+    if status == 'Doing':
+        start_timestr = convert_timestamp_to_timestr_yyyy_mm_dd(start)
+        today_timestr = convert_datetime_to_timestr_yyyy_mm_dd(date.today())
+        calendar_objects = list(Calendar.objects
+            .filter(date__gte=start_timestr)
+            .filter(date__lt=today_timestr)
+        )
+        for calendar_object in calendar_objects:
+            if not calendar_object.is_holiday:
+                net_cost = net_cost - RESOLUTION
+        today_calendar_object = Calendar.objects.get(date=today_timestr)
+        if not today_calendar_object.is_holiday:
+            net_cost = net_cost - next_unit_timestamp
+    logging.debug('net_cost: %.1f days' % (net_cost / ONE_DAY_TIMESTAMP))
 
     loop_number = 0
     while net_cost > 0:
@@ -54,22 +84,29 @@ def compute_actual_cost(start, cost):
 
             if calendar_object.is_holiday:
                 logging.debug('%s is holiday.' % calendar_object.date)
+
                 actual_cost = actual_cost + ONE_DAY_TIMESTAMP
                 logging.debug('actual_cost: %.1f days' % (actual_cost / ONE_DAY_TIMESTAMP))
-                logging.debug('net_cost: %.1f days' % (net_cost / ONE_DAY_TIMESTAMP))
 
             else:
                 logging.debug('%s is workday.' % calendar_object.date)
+                
                 if net_cost > ONE_DAY_TIMESTAMP:
+                
                     actual_cost = actual_cost + ONE_DAY_TIMESTAMP
+                    logging.debug('actual_cost: %.1f days' % (actual_cost / ONE_DAY_TIMESTAMP))
+                
                     net_cost = net_cost - ONE_DAY_TIMESTAMP
-                    logging.debug('actual_cost: %.1f days' % (actual_cost / ONE_DAY_TIMESTAMP))
                     logging.debug('net_cost: %.1f days' % (net_cost / ONE_DAY_TIMESTAMP))
+                
                 else:
+
                     actual_cost = actual_cost + net_cost
-                    net_cost = 0
                     logging.debug('actual_cost: %.1f days' % (actual_cost / ONE_DAY_TIMESTAMP))
+
+                    net_cost = 0
                     logging.debug('net_cost: %.1f days' % (net_cost / ONE_DAY_TIMESTAMP))
+
                     break
 
     return actual_cost
@@ -86,14 +123,14 @@ def new_serie_task_object(user_cur, task_object):
     logging.debug('start: %s' % convert_timestamp_to_timestr_yyyy_mm_dd_fraction(start))
     serie_task_object['start'] = start
 
-    actual_cost = compute_actual_cost(start, task_object.cost)
-    logging.debug('actual_cost: %.1f days' % (actual_cost / ONE_DAY_TIMESTAMP))
+    actual_cost = compute_actual_cost(start, task_object.cost, STATUS_CHOICE_LIST[task_object.status])
+    logging.debug('actual_cost: %.3f days' % (actual_cost / ONE_DAY_TIMESTAMP))
 
     end = start + actual_cost
     logging.debug('end: %s' % convert_timestamp_to_timestr_yyyy_mm_dd_fraction(end))
     serie_task_object['end'] = end
     if end > user_cur:
-        user_cur = serie_task_object['end']
+        user_cur = end
         logging.debug('user_cur: %s' % convert_timestamp_to_timestr_yyyy_mm_dd_fraction(user_cur))
     else:
         pass
@@ -171,7 +208,9 @@ def add_todo_task_objects(user, user_cur, serie_task_objects):
         .filter(status=STATUS_CHOICE_LIST.index('Todo'))
         .order_by('-priority')
     )
-    taskposition_objects = list(TaskPosition.objects.all())
+    taskposition_objects = list(TaskPosition.objects
+        .filter(pre__status=STATUS_CHOICE_LIST.index('Todo'))
+    )
 
     while todo_task_objects:
         ready_todo_task_objects = get_ready_todo_task_objects(todo_task_objects, taskposition_objects)
@@ -190,7 +229,7 @@ def add_todo_task_objects(user, user_cur, serie_task_objects):
                 break
             else:
                 user_cur_to_start = user_starts[0] - user_cur
-                cost = UNIT * task_object.cost
+                cost = UNIT_TIMESTAMP * task_object.cost
                 if user_cur_to_start < 0:
                     raise ValueError('???')
                 elif user_cur_to_start < cost:
@@ -236,7 +275,6 @@ def save_new_serie_object(serie_task_objects):
 
 def refresh_serie_objects(user):
     logging.info('Refreshing serie objects...')
-
     tic = time()
 
     user_cur = convert_datetime_to_timestamp(next_workday())
@@ -252,6 +290,5 @@ def refresh_serie_objects(user):
     toc = time()
     tictoc = toc - tic
     logging.debug('TicToc: %.3fs' % tictoc)
-
     logging.info('Refreshing serie objects...done.')
     return True
