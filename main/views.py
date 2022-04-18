@@ -1,10 +1,11 @@
-from django.db.models import Q
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Q
 from django.http import Http404, HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse, reverse_lazy
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.utils import timezone
 from django.views import generic
 
 from .models import *
@@ -19,23 +20,13 @@ import chinese_calendar
 # Create your views here.
 
 
-def next_cost_mark():
-    cost_mark = convert_datetime_to_timestamp(date.today())
-    now_timestamp = convert_datetime_to_timestamp(datetime.now())
-    while cost_mark <= now_timestamp:
-        cost_mark = cost_mark + UNIT_TIMESTAMP
-    return cost_mark
-
-
 def update_task_objects(user):
-    now_timestamp = convert_datetime_to_timestamp(datetime.now())
-
     refresh = False
 
     doing_serie_objects = list(Serie.objects
         .filter(task__assignee=user)
         .filter(task__status=STATUS_CHOICE_LIST.index('Doing'))
-        .filter(end__lte=now_timestamp)
+        .filter(end__lte=timezone.now())
     )
     for serie_object in doing_serie_objects:
         logging.debug('serie_object: %s' % serie_object)
@@ -43,7 +34,8 @@ def update_task_objects(user):
         task_object = Task.objects.get(pk=serie_object.task.id)
         logging.debug('task_object: %s' % task_object)
 
-        task_object.cost = (next_cost_mark() - serie_object.start) // UNIT_TIMESTAMP
+        delta_units_from_last_zero = get_delta_units_from_last_zero()
+        task_object.cost = (delta_units_from_last_zero - serie_object.start) // UNIT
         task_object.save()
 
         refresh = True
@@ -58,7 +50,7 @@ def update_task_objects(user):
         todo_serie_objects = list(Serie.objects
             .filter(task__assignee=user)
             .filter(task__status=STATUS_CHOICE_LIST.index('Todo'))
-            .filter(start__lte=now_timestamp)
+            .filter(start__lte=timezone.now())
         )
         for serie_object in todo_serie_objects:
             logging.debug('serie_object: %s' % serie_object)
@@ -66,8 +58,8 @@ def update_task_objects(user):
             task_object = Task.objects.get(pk=serie_object.task.id)
             logging.debug('task_object: %s' % task_object)
             
-            if serie_object.start <= now_timestamp and task_object.status == STATUS_CHOICE_LIST.index('Todo'):
-                task_object.start = convert_timestamp_to_datetime(serie_object.start)
+            if serie_object.start <= timezone.now() and task_object.status == STATUS_CHOICE_LIST.index('Todo'):
+                task_object.start = serie_object.start
                 task_object.status = STATUS_CHOICE_LIST.index('Doing')
                 task_object.save()
 
@@ -79,38 +71,70 @@ def get_series(user):
             'data': [],
         }
     }
-    for serie_object in Serie.objects.all():
+
+    for serie_object in Serie.objects.filter(task__assignee=user):
         task_object = serie_object.task
-        if task_object.assignee == user:
-            serie_project_task_obect = {
-                'id': 'task_%d' % task_object.id,
-                'name': str(task_object),
-                'milestone': task_object.milestone,
-                'assignee': task_object.assignee.username,
-                'status': task_object.status,
-                'start': serie_object.start,
-                'end': serie_object.end - 1000,
-            }
+        serie_project_task_obect = {
+            'id': 'task_%d' % task_object.id,
+            'name': str(task_object),
+            'milestone': task_object.milestone,
+            'assignee': task_object.assignee.username,
+            'status': task_object.status,
+            'start': convert_datetime_to_timestamp(serie_object.start),
+            'end': convert_datetime_to_timestamp(serie_object.end - timedelta(seconds=1)),
+        }
 
-            project_object = serie_object.task.project
+        project_object = serie_object.task.project
 
-            if project_object is not None:
-                if str(project_object.id) not in serie_object_dict:
-                    serie_object_dict[str(project_object.id)] = {
-                        'name': project_object.name,
-                        'data': [
-                            {
-                                'id': 'project_%d' % project_object.id,
-                                'name': project_object.name,
-                            }
-                        ],
-                    }
+        if project_object is not None:
+            if str(project_object.id) not in serie_object_dict:
+                serie_object_dict[str(project_object.id)] = {
+                    'name': project_object.name,
+                    'data': [
+                        {
+                            'id': 'project_%d' % project_object.id,
+                            'name': project_object.name,
+                        }
+                    ],
+                }
 
-                serie_project_task_obect['parent'] = 'project_%d' % project_object.id,
-                serie_object_dict[str(project_object.id)]['data'].append(serie_project_task_obect)
+            serie_project_task_obect['parent'] = 'project_%d' % project_object.id,
+            serie_object_dict[str(project_object.id)]['data'].append(serie_project_task_obect)
 
-            else:
-                serie_object_dict[str(0)]['data'].append(serie_project_task_obect)
+        else:
+            serie_object_dict[str(0)]['data'].append(serie_project_task_obect)
+    
+    for serie_object in Serie.objects.filter(task__assignee=None):
+        task_object = serie_object.task
+        serie_project_task_obect = {
+            'id': 'task_%d' % task_object.id,
+            'name': str(task_object),
+            'milestone': task_object.milestone,
+            'assignee': task_object.assignee.username,
+            'status': task_object.status,
+            'start': convert_datetime_to_timestamp(serie_object.start),
+            'end': convert_datetime_to_timestamp(serie_object.end - timedelta(seconds=1)),
+        }
+
+        project_object = serie_object.task.project
+
+        if project_object is not None:
+            if str(project_object.id) not in serie_object_dict:
+                serie_object_dict[str(project_object.id)] = {
+                    'name': project_object.name,
+                    'data': [
+                        {
+                            'id': 'project_%d' % project_object.id,
+                            'name': project_object.name,
+                        }
+                    ],
+                }
+
+            serie_project_task_obect['parent'] = 'project_%d' % project_object.id,
+            serie_object_dict[str(project_object.id)]['data'].append(serie_project_task_obect)
+
+        else:
+            serie_object_dict[str(0)]['data'].append(serie_project_task_obect)
 
     serie_object_list = []
     for key, value in serie_object_dict.items():
@@ -120,16 +144,18 @@ def get_series(user):
 
 
 def more_calendars():
-    last_date = Calendar.objects.last().date
-
-    today_timestamp = convert_datetime_to_timestamp(datetime.today())
-    i_from = (convert_datetime_to_timestamp(last_date) - today_timestamp) // ONE_DAY_TIMESTAMP + 1
+    i_from = 0
     i_to = 100
+
+    last_calendar_object = Calendar.objects.last()
+    if last_calendar_object is not None:
+        i_from = abs(Calendar.objects.last().date - date.today()) // ONE_DAY + 1
+        i_to = 100
 
     if i_from < i_to:
         logging.info('More calendars: (%d, %d)' % (i_from, i_to))
         for i in range(i_from, i_to):
-            i_date = convert_timestamp_to_datetime(today_timestamp + ONE_DAY_TIMESTAMP * i)
+            i_date = datetime.today() + ONE_DAY * i
             calendar_object = Calendar(
                 date = i_date,
                 is_holiday = chinese_calendar.is_holiday(i_date)
@@ -307,10 +333,11 @@ def task_create_or_update_submit(request):
         m0 = re.match('([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]+)/%d' % RESOLUTION, start)
         if m0:
             start_datetime = datetime(
-                year = int(m0.group(1)),
-                month = int(m0.group(2)),
-                day = int(m0.group(3)),
-                hour = 24 // RESOLUTION * int(m0.group(4)),
+                year=int(m0.group(1)),
+                month=int(m0.group(2)),
+                day=int(m0.group(3)),
+                hour=(24 // RESOLUTION * int(m0.group(4))),
+                tzinfo=LOCAL_TIME_ZONE_INFO,
             )
         else:
             m1 = re.match('([0-9]{4})-([0-9]{2})-([0-9]{2})', start)
@@ -322,10 +349,11 @@ def task_create_or_update_submit(request):
         m0 = re.match('([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]+)/%d' % RESOLUTION, deadline)
         if m0:
             deadline_datetime = datetime(
-                year = int(m0.group(1)),
-                month = int(m0.group(2)),
-                day = int(m0.group(3)),
-                hour = 24 // RESOLUTION * int(m0.group(4)),
+                year=int(m0.group(1)),
+                month=int(m0.group(2)),
+                day=int(m0.group(3)),
+                hour=(24 // RESOLUTION * int(m0.group(4))),
+                tzinfo=LOCAL_TIME_ZONE_INFO,
             )
         else:
             m1 = re.match('([0-9]{4})-([0-9]{2})-([0-9]{2})', deadline)

@@ -97,17 +97,17 @@ class Algorithm(models.Model):
 class Serie(models.Model):
     id = models.AutoField(primary_key=True)
     task = models.ForeignKey(Task, default=None, blank=None, null=None, on_delete=models.CASCADE)
-    start = models.BigIntegerField(default=0, blank=False, null=False)
-    end = models.BigIntegerField(default=0, blank=False, null=False)
+    start = models.DateTimeField(default=0, blank=False, null=False)
+    end = models.DateTimeField(default=0, blank=False, null=False)
 
     def get_absolute_url(self):
         return reverse('main:serie_detail', kwargs={'pk': self.pk})
 
     def start_timestr_yyyy_mm_dd_fraction(self):
-        return convert_timestamp_to_timestr_yyyy_mm_dd_fraction(self.start)
+        return convert_datetime_to_timestr_yyyy_mm_dd_fraction(self.start)
 
     def end_timestr_yyyy_mm_dd_fraction(self):
-        return convert_timestamp_to_timestr_yyyy_mm_dd_fraction(self.end, ZERO_LEFT)
+        return convert_datetime_to_timestr_yyyy_mm_dd_fraction(self.end, ZERO_LEFT)
 
     def __str__(self):
         return '#%d [%s, %s] %s => %s' % (
