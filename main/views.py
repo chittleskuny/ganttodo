@@ -21,6 +21,13 @@ import chinese_calendar
 
 
 def update_task_objects(user):
+    last_zero = datetime(
+        year=date.today().year,
+        month=date.today().month,
+        day=date.today().day,
+        tzinfo=LOCAL_TIME_ZONE_INFO,
+    )
+
     refresh = False
 
     doing_serie_objects = list(Serie.objects
@@ -35,7 +42,7 @@ def update_task_objects(user):
         logging.debug('task_object: %s' % task_object)
 
         delta_units_from_last_zero = get_delta_units_from_last_zero()
-        task_object.cost = (delta_units_from_last_zero - serie_object.start) // UNIT
+        task_object.cost = (last_zero + delta_units_from_last_zero - serie_object.start) // UNIT
         task_object.save()
 
         refresh = True

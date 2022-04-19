@@ -64,9 +64,6 @@ def compute_actual_cost(start, cost, status):
         for calendar_object in calendar_objects:
             if not calendar_object.is_holiday:
                 net_cost = net_cost - ONE_DAY
-        today_calendar_object = Calendar.objects.get(date=last_zero)
-        if not today_calendar_object.is_holiday:
-            net_cost = net_cost - delta_units_from_last_zero
     logging.debug('net_cost: %s' % net_cost)
 
     loop_number = 0

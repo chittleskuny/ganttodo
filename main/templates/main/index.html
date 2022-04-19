@@ -18,6 +18,12 @@
         var seriesObject = JSON.parse('{{ series }}'.replaceAll('&quot;', '"'))
         console.debug(seriesObject)
 
+        Highcharts.setOptions({
+            global: {
+                useUTC: false
+            }
+        });
+
         Highcharts.ganttChart('ganttchart', {
             series: seriesObject,
             time: {
@@ -39,7 +45,7 @@
                         }, {
                             visible: !this.options.milestone,
                             title: 'End',
-                            value: Highcharts.dateFormat('%Y-%m-%d', this.end - 1000)
+                            value: Highcharts.dateFormat('%Y-%m-%d', this.end)
                         }, {
                             title: 'Completed',
                             value: status
