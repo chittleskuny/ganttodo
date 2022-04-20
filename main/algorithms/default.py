@@ -24,9 +24,9 @@ def get_delta_units_from_last_zero(appointed_datetime=timezone.now()):
     return UNIT * index
 
 
-def next_workday(appointed_datetime=timezone.now()):
-    next_day = appointed_datetime + ONE_DAY
-    for calendar_object in Calendar.objects.filter(date__gte=next_day)[:30]:
+def get_next_workday(appointed_datetime=timezone.now()):
+    next_workday = None
+    for calendar_object in Calendar.objects.filter(date__gte=appointed_datetime)[:30]:
         if not calendar_object.is_holiday:
             next_workday = datetime(
                 year=calendar_object.date.year,
@@ -34,14 +34,29 @@ def next_workday(appointed_datetime=timezone.now()):
                 day=calendar_object.date.day,
                 tzinfo = LOCAL_TIME_ZONE_INFO,
             )
-            logging.debug('next_workday after %s: %s' % (appointed_datetime, next_workday))
-            return next_workday
+            break
 
-    # TODO
-    return appointed_datetime
+    logging.debug('next_workday after %s (include today): %s' % (appointed_datetime, next_workday))
+    return next_workday
 
 
-def compute_actual_cost(start, cost, status):
+def get_next_unit(appointed_datetime=timezone.now()):
+    next_workday = get_next_workday(appointed_datetime)
+
+    next_unit = None
+    if next_workday < appointed_datetime: # next workday is today
+        delta_units_from_last_zero = get_delta_units_from_last_zero(appointed_datetime)
+        next_unit = next_workday + delta_units_from_last_zero
+    else:
+        next_unit = next_workday
+    return next_unit
+
+
+def add_done_task_objects(user, serie_task_objects):
+    pass
+
+
+def get_actual_cost(start, cost, status):
     last_zero = datetime(
         year=timezone.now().year,
         month=timezone.now().month,
@@ -52,7 +67,7 @@ def compute_actual_cost(start, cost, status):
 
     actual_cost = timedelta()
     if status == 'Doing':
-        actual_cost = last_zero - start
+        actual_cost = last_zero + delta_units_from_last_zero - start
     logging.debug('actual_cost: %s' % actual_cost)
 
     net_cost = UNIT * cost
@@ -61,9 +76,11 @@ def compute_actual_cost(start, cost, status):
             .filter(date__gte=start)
             .filter(date__lt=last_zero)
         )
+        logging.debug('Doing days: %s' % calendar_objects)
         for calendar_object in calendar_objects:
             if not calendar_object.is_holiday:
                 net_cost = net_cost - ONE_DAY
+        net_cost = net_cost - delta_units_from_last_zero
     logging.debug('net_cost: %s' % net_cost)
 
     loop_number = 0
@@ -117,7 +134,7 @@ def new_serie_task_object(user_cur, task_object):
     logging.debug('start: %s' % start)
     serie_task_object['start'] = start
 
-    actual_cost = compute_actual_cost(start, task_object.cost, STATUS_CHOICE_LIST[task_object.status])
+    actual_cost = get_actual_cost(start, task_object.cost, STATUS_CHOICE_LIST[task_object.status])
     logging.debug('actual_cost: %s' % actual_cost)
 
     end = start + actual_cost
@@ -155,7 +172,7 @@ def get_user_starts(user):
         .order_by('start')
     )
     for task_object in task_objects:
-        user_starts.append(task_object.start)
+        user_starts.append(timezone.localtime(task_object.start, timezone=LOCAL_TIME_ZONE_INFO))
 
     user_starts.sort()
     return user_starts
@@ -199,33 +216,25 @@ def add_todo_task_objects(user, user_cur, serie_task_objects):
     )
 
     while todo_task_objects:
+        logging.debug('user_cur: %s' % user_cur)
+
         ready_todo_task_objects = get_ready_todo_task_objects(todo_task_objects, taskposition_objects)
         if not ready_todo_task_objects:
-            raise ValueError('Toposorting failed!')
+            raise RuntimeError('Toposorting failed! No task objects ready todo!')
 
         choose = None
-        candicate = None
-        for task_object in ready_todo_task_objects:
-
-            if task_object.start is not None:
-                candicate = task_object
-
-            if len(user_starts) == 0:
-                choose = task_object
-                break
-            else:
-                start_from_user_cur = user_starts[0] - user_cur
-                cost = UNIT_TIMESTAMP * task_object.cost
-                if start_from_user_cur < 0:
-                    raise ValueError('???')
-                elif start_from_user_cur < cost:
-                    continue
-                else:
+        if len(user_starts) == 0:
+            choose = task_object
+        else:
+            for task_object in ready_todo_task_objects:
+                if task_object.start is not None and task_object.start == user_starts[0]:
                     choose = task_object
                     break
-
-        else:
-            choose = candicate
+            if user_starts[0] != user_cur:
+                for task_object in ready_todo_task_objects:
+                    if task_object.start is None and (user_cur + UNIT * task_object.cost) <= user_starts[0]:
+                        choose = task_object
+                        break
 
         logging.info('Choose %s.' % choose)
         if choose is None:
@@ -262,7 +271,8 @@ def refresh_serie_objects(user):
     tic = time()
 
     serie_task_objects = []
-    user_cur = next_workday()
+    user_cur = get_next_unit()
+    add_done_task_objects(user, serie_task_objects)
     add_doing_task_objects(user, user_cur, serie_task_objects)
     add_todo_task_objects(user, user_cur, serie_task_objects)
     delete_old_serie_object(user)

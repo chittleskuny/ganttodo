@@ -110,10 +110,10 @@ class Serie(models.Model):
         return convert_datetime_to_timestr_yyyy_mm_dd_fraction(self.end, ZERO_LEFT)
 
     def __str__(self):
-        return '#%d [%s, %s] %s => %s' % (
-            self.task.id,
+        return '[%s, %s] #%d %s => %s' % (
             self.start_timestr_yyyy_mm_dd_fraction(),
             self.end_timestr_yyyy_mm_dd_fraction(),
+            self.task.id,
             self.task.title,
             self.task.assignee,
         )

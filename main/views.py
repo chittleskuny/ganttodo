@@ -258,6 +258,17 @@ class TaskDetailView(LoginRequiredMixin, generic.DetailView):
     model = Task
     context_object_name = 'task'
 
+    def get_context_data(self, *args, **kwargs):
+        context = {}
+        if self.object:
+            task_object = self.object
+            task_object.priority = PRIORITY_CHOICE_LIST[task_object.priority]
+            task_object.cost = UNIT * task_object.cost
+            task_object.status = STATUS_CHOICE_LIST[task_object.status]
+            context['task'] = task_object
+        context.update(kwargs)
+        return super().get_context_data(**context)
+
 
 def task_create(request):
     project_objects = Project.objects.order_by('name')
