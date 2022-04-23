@@ -224,7 +224,7 @@ def add_todo_task_objects(user, user_cur, serie_task_objects):
 
         choose = None
         if len(user_starts) == 0:
-            choose = task_object
+            choose = ready_todo_task_objects[0]
         else:
             for task_object in ready_todo_task_objects:
                 if task_object.start is not None and task_object.start == user_starts[0]:
@@ -236,20 +236,19 @@ def add_todo_task_objects(user, user_cur, serie_task_objects):
                         choose = task_object
                         break
 
-        logging.info('Choose %s.' % choose)
+        logging.info('Choose %s' % choose)
         if choose is None:
             raise ValueError('Cannot continue!')
 
-        user_cur, serie_task_object = new_serie_task_object(user_cur, task_object)
-
-        if task_object.start is not None:
-            user_starts.remove(task_object.start)
-            logging.debug('user_starts: %s' % user_starts)
-        
+        user_cur, serie_task_object = new_serie_task_object(user_cur, choose)
         serie_task_objects.append(serie_task_object)
 
-        todo_task_objects.remove(task_object)
-        remove_task_object_from_taskposition_objects(task_object, taskposition_objects)
+        if choose.start is not None:
+            user_starts.remove(choose.start)
+            logging.debug('user_starts: %s' % user_starts)
+        
+        todo_task_objects.remove(choose)
+        remove_task_object_from_taskposition_objects(choose, taskposition_objects)
 
 
 def delete_old_serie_object(user):

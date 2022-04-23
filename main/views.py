@@ -410,6 +410,7 @@ def task_create_or_update_submit(request):
         task_object.deadline = deadline_datetime
         task_object.assignee = assignee
         task_object.status = status
+
     task_object.save()
 
     i = 1
