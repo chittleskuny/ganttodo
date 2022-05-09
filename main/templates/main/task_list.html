@@ -1,15 +1,15 @@
 {% extends "main/base.html" %}
 {% block body %}
-    <div id="toolbar">
-        <div class="toolbar_item">
-            <a href="../create"><button>Create</button></a>
-        </div>
-    </div>
     {% if queryset_list %}
-        <div class="queryset_list">
+        <div class="queryset-list">
             <ul>
                 {% for task in queryset_list %}
-                    <li><a href="{{ task.get_absolute_url }}">{{ task }}</a></li>
+                    <li>
+                        <span class="info-item-ascii">{{ task.start_end }}</span>
+                        <a href="{{ task.get_absolute_url }}">{{ task }}</a>
+                        =>
+                        {{ task.user }}
+                    </li>
                 {% endfor %}
             </ul>
         </div>
@@ -31,6 +31,10 @@
             </span>
         </div>
     {% else %}
-        <div class="no_items"><p>No items.</p></div>
+        <div class="no-items">
+            <ul>
+                <li>No items.</li>
+            </ul>
+        </div>
     {% endif %}
 {% endblock %}

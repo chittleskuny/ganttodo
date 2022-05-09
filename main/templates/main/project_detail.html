@@ -1,15 +1,36 @@
 {% extends "main/base.html" %}
 {% block body %}
-    <div id="toolbar">
-        <div class="toolbar_item">
-            <a href="delete"><button>Delete</button></a>
-        </div>
-        <div class="toolbar_item">
-            <a href="update"><button>Update</button></a>
-        </div>
-    </div>
-    <div class="detail">
+    <div class="info">
         <p>Id: {{ project.id }}</p>
+        <p>Group: {{ project.group }}</p>
         <p>Name: {{ project.name }}</p>
+    </div>
+    <div class="queryset-list">
+        Tasks
+        {% if task_objects %}
+            <div class="queryset-list">
+                <ul>
+                    {% for task in task_objects %}
+                        <li>
+                            <span class="info-item-ascii">{{ task.start_end }}</span>
+                            <a href="{{ task.get_absolute_url }}">{{ task }}</a>
+                            =>
+                            {{ task.user }}
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% else %}
+            <div class="no-items">
+                <ul>
+                    <li>No items.</li>
+                </ul>
+            </div>
+        {% endif %}
+        <div id="toolbar">
+            <div class="toolbar-item">
+                <a href="{{ project.get_absolute_url }}task/create"><button>Create Task</button></a>
+            </div>
+        </div>
     </div>
 {% endblock %}

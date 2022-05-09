@@ -50,8 +50,8 @@
                             title: 'Completed',
                             value: status
                         }, {
-                            title: 'Assignee',
-                            value: this.options.assignee || 'unassigned'
+                            title: 'user',
+                            value: this.options.user || 'unassigned'
                         }
                     ]
 
@@ -78,5 +78,6 @@
                 min: today - 3 * day,
             }
         })
+
     </script>
 {% endblock %}

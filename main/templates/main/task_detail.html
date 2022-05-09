@@ -1,25 +1,25 @@
 {% extends "main/base.html" %}
 {% block body %}
-    <div id="toolbar">
-        <div class="toolbar_item">
-            <a href="delete"><button>Delete</button></a>
-        </div>
-        <div class="toolbar_item">
-            <a href="update"><button>Update</button></a>
-        </div>
-    </div>
-    <div class="detail">
+    <div class="info">
         <p>Id: {{ task.id }}</p>
         <p>Project: {{ task.project }}</p>
         <p>Title: {{ task.title }}</p>
         <p>Description: {{ task.description }}</p>
         <p>Reference: {{ task.reference }}</p>
         <p>Milestone: {{ task.milestone }}</p>
-        <p>Priority: {{ task.priority }}</p>
-        <p>Cost: {{ task.cost }}</p>
+        <p>Priority: {{ task.priority_str }}</p>
+        <p>Cost: {{ task.cost_timedelta }}</p>
         <p>Start: {{ task.start_timestr_yyyy_mm_dd }}</p>
         <p>Deadline: {{ task.deadline_timestr_yyyy_mm_dd }}</p>
-        <p>Assignee: {{ task.assignee }}</p>
-        <p>Status: {{ task.status }}</p>
+        <p>User: {{ task.user }}</p>
+        <p>Status: {{ task.status_str }}</p>
+    </div>
+    <div id="toolbar">
+        <div class="toolbar-item">
+            <a href="delete"><button>Delete</button></a>
+        </div>
+        <div class="toolbar-item">
+            <a href="update"><button>Update</button></a>
+        </div>
     </div>
 {% endblock %}

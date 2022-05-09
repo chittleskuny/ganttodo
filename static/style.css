@@ -30,7 +30,7 @@ form {
 
 .navi-item {
     float: left;
-    width: 25%;
+    width: 20%;
     background-color: #293150;
 }
 
@@ -41,34 +41,47 @@ form {
     letter-spacing: 1px;
 }
 
-.toolbar_item {
+.toolbar-item {
     float: left;
     margin: 5px 10px 5px 0px;
 }
 
-.queryset_list {
+.info {
     clear: both;
 }
 
-.no_items {
+.info-item {
+    margin: 3px;
+}
+
+.info-item-ascii {
+    font-family: 'Consolas';
+}
+
+.queryset-list {
+    clear: both;
+}
+
+.no-items {
     clear: both;
     font-size: medium;
-}
-
-.detail {
-    clear: both;
 }
 
 .form-item {
     margin: 3px;
 }
 
-.submit {
-    margin: 6px;
+.form-item-key {
+    margin: 3px;
 }
 
-.task_basic_key_item, .task_basic_value_item {
-    height: 25px;
+.form-item-value {
+    width: 60%;
+    margin: 3px;
+}
+
+.submit {
+    margin: 3px;
 }
 
 #navi {
@@ -109,39 +122,39 @@ form {
     clear: both;
 }
 
-#task_detail {
+#task-detail {
     clear: both;
     height: 768px;
 }
 
-#task_basic_outside {
+#task-basic-outside {
     float: left;
-    width: 25%;
+    width: 20%;
     height: 100%;
 }
 
-#task_basic_inside {
+#task-basic-inside {
     display: flex;
     flex: 1;
     width: 100%;
 }
 
-#task_basic_key {
+#task-basic-key {
     width: 25%;
     text-align: right;
 }
 
-#task_basic_value {
+#task-basic-value {
     width: 25%;
 }
 
-#task_description_outside {
+#task-description-outside {
     float: left;
-    width: 75%;
+    width: 80%;
     height: 100%;
 }
 
-#task_description_inside {
+#task-description-inside {
     height: 100%;
     padding: 3px 3px 3px 3px;
 }

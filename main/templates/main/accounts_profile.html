@@ -1,6 +1,19 @@
 {% extends "main/base.html" %}
 {% block body %}
-    <div class="toolbar_item">
+    <div>
+        <ul>
+            <li><div class="info-item">Username: {{ user.username }}</div></li>
+            <li><div class="info-item">First name: {{ user.first_name }}</div></li>
+            <li><div class="info-item">Last name: {{ user.last_name }}</div></li>
+            <li><div class="info-item">Email: {{ user.email }}</div></li>
+            <li><div class="info-item">Groups: {{ groups }}</div></li>
+            <li><div class="info-item">User permissions: {{ user_permissions }}</div></li>
+            <li><div class="info-item">Is staff: {{ user.is_staff }}</div></li>
+            <li><div class="info-item">Is active: {{ user.is_active }}</div></li>
+            <li><div class="info-item">Is superuser: {{ user.is_superuser }}</div></li>
+            <li><div class="info-item">Last login: {{ user.last_login }}</div></li>
+            <li><div class="info-item">Date joined: {{ user.date_joined }}</div></li>
+        </ul>
         <a href="../refresh/submit"><button>Refresh</button></a>
         <a href="../logout/submit"><button>Logout</button></a>
     </div>

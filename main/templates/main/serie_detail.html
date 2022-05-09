@@ -1,14 +1,14 @@
 {% extends "main/base.html" %}
 {% block body %}
     <div id="toolbar">
-        <div class="toolbar_item">
+        <div class="toolbar-item">
             <a href="delete"><button>Delete</button></a>
         </div>
-        <div class="toolbar_item">
+        <div class="toolbar-item">
             <a href="update"><button>Update</button></a>
         </div>
     </div>
-    <div class="detail">
+    <div class="info">
         <p>Id: {{ serie.id }}</p>
         <p>Task: {{ serie.task }}</p>
         <p>Start: {{ serie.start_timestr_yyyy_mm_dd_fraction }}</p>

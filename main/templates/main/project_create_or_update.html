@@ -1,6 +1,6 @@
 {% extends "main/base.html" %}
 {% block body %}
-    <form method="post">{% csrf_token %}
+    <form action="{% url 'main:project_create_or_update_submit' %}" method="post">{% csrf_token %}
         {% for field in form %}
             <div class="fieldWrapper">
                 {{ field.errors }}
@@ -10,6 +10,6 @@
                 {% endif %}
             </div>
         {% endfor %}
-        <input class="btn btn-default" type="submit" value="Update" />
+        <input class="btn btn-default" type="submit" value="Create" />
     </form>
 {% endblock %}

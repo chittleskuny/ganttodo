@@ -8,9 +8,9 @@ from .models import *
 
 class ProjectAdmin(admin.ModelAdmin):
     fieldsets = [
-        ('basic', {'fields': ['name']}),
+        ('basic', {'fields': ['group', 'name']}),
     ]
-    list_display = ('id', 'name',)
+    list_display = ('id', 'group', 'name',)
 
 
 class TaskAdmin(admin.ModelAdmin):
@@ -25,7 +25,7 @@ class TaskAdmin(admin.ModelAdmin):
             'cost',
             'start',
             'deadline',
-            'assignee',
+            'user',
             'status'
         ]}),
     ]
@@ -40,7 +40,7 @@ class TaskAdmin(admin.ModelAdmin):
         'cost',
         'start',
         'deadline',
-        'assignee',
+        'user',
         'status',
     )
 

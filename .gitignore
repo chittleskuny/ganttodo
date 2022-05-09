@@ -130,7 +130,7 @@ dmypy.json
 
 static/node_modules/
 
-collect_static/
+collectstatic/
 uwsgi.pid
 
 runserver.bat

@@ -1,0 +1,42 @@
+{% extends "main/base.html" %}
+{% block body %}
+    <div class="queryset-list">
+        Users
+        {% if user_objects %}
+            <div class="queryset-list">
+                <ul>
+                    {% for user in user_objects %}
+                        <li>{{ user }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% else %}
+            <div class="no-items"><p>No items.</p></div>
+        {% endif %}
+    </div>
+    <div class="queryset-list">
+        Projects
+        {% if project_objects %}
+            <div class="queryset-list">
+                <ul>
+                    {% for project in project_objects %}
+                        <li>
+                            <a href="{{ project.get_absolute_url }}">{{ project }}</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% else %}
+            <div class="no-items">
+                <ul>
+                    <li>No items.</li>
+                </ul>
+            </div>
+        {% endif %}
+        <div id="toolbar">
+            <div class="toolbar-item">
+                <a href="{{ group.get_absolute_url }}project/create"><button>Create Project</button></a>
+            </div>
+        </div>
+    </div>
+{% endblock %}

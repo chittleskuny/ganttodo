@@ -1,12 +1,12 @@
 {% extends "main/base.html" %}
 {% block body %}
     <div id="toolbar">
-        <div class="toolbar_item">
+        <div class="toolbar-item">
             <a href="../create"><button>Create</button></a>
         </div>
     </div>
     {% if queryset_list %}
-        <div class="queryset_list">
+        <div class="queryset-list">
             <ul>
                 {% for algorithm in queryset_list %}
                     <li><a href="{{ algorithm.get_absolute_url }}">{{ algorithm }}</a></li>
@@ -31,6 +31,10 @@
             </span>
         </div>
     {% else %}
-        <div class="no_items"><p>No items.</p></div>
+        <div class="no-items">
+            <ul>
+                <li>No items.</li>
+            </ul>
+        </div>
     {% endif %}
 {% endblock %}

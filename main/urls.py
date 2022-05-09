@@ -13,14 +13,19 @@ urlpatterns = [
     path('accounts/logout/submit', views.accounts_logout_submit, name='accounts_logout_submit'),
     path('accounts/refresh/submit', views.accounts_refresh_submit, name='accounts_refresh_submit'),
 
+    path('group/list/', views.group_list, name='group_list'),
+    path('group/<int:pk>/', views.group_detail, name='group_detail'),
+    path('group/<int:pk>/project/create/', views.group_project_create, name='group_project_create'),
+
     path('project/list/', views.ProjectListView.as_view(), name='project_list'),
-    path('project/create/', views.ProjectCreateView.as_view(), name='project_create'),
+    path('project/create/or/update/submit', views.project_create_or_update_submit, name='project_create_or_update_submit'),
     path('project/<int:pk>/', views.ProjectDetailView.as_view(), name='project_detail'),
     path('project/<int:pk>/update/', views.ProjectUpdateView.as_view(), name='project_update'),
     path('project/<int:pk>/delete/', views.ProjectDeleteView.as_view(), name='project_delete'),
+    path('project/<int:pk>/task/list/', views.project_task_list, name='project_task_list'),
+    path('project/<int:pk>/task/create/', views.project_task_create, name='project_task_create'),
 
     path('task/list/', views.TaskListView.as_view(), name='task_list'),
-    path('task/create/', views.task_create, name='task_create'),
     path('task/create/or/update/submit', views.task_create_or_update_submit, name='task_create_or_update_submit'),
     path('task/<int:pk>/', views.TaskDetailView.as_view(), name='task_detail'),
     path('task/<int:pk>/update/', views.task_update, name='task_update'),

@@ -9,15 +9,13 @@ from django.utils import timezone
 from django.views import generic
 
 from .models import *
+from .forms import *
 from .algorithms.default import *
 
 import re
 import json
 import logging
 import chinese_calendar
-
-
-# Create your views here.
 
 
 def update_task_objects(user):
@@ -31,8 +29,8 @@ def update_task_objects(user):
     refresh = False
 
     doing_serie_objects = list(Serie.objects
-        .filter(task__assignee=user)
-        .filter(task__status=STATUS_CHOICE_LIST.index('Doing'))
+        .filter(task__user=user)
+        .filter(task__status=STATUS_CHOICE_STR_LIST.index('Doing'))
         .filter(end__lte=timezone.now())
     )
     for serie_object in doing_serie_objects:
@@ -55,8 +53,8 @@ def update_task_objects(user):
     else:
 
         todo_serie_objects = list(Serie.objects
-            .filter(task__assignee=user)
-            .filter(task__status=STATUS_CHOICE_LIST.index('Todo'))
+            .filter(task__user=user)
+            .filter(task__status=STATUS_CHOICE_STR_LIST.index('Todo'))
             .filter(start__lte=timezone.now())
         )
         for serie_object in todo_serie_objects:
@@ -65,9 +63,9 @@ def update_task_objects(user):
             task_object = Task.objects.get(pk=serie_object.task.id)
             logging.debug('task_object: %s' % task_object)
             
-            if serie_object.start <= timezone.now() and task_object.status == STATUS_CHOICE_LIST.index('Todo'):
+            if serie_object.start <= timezone.now() and task_object.status == STATUS_CHOICE_STR_LIST.index('Todo'):
                 task_object.start = serie_object.start
-                task_object.status = STATUS_CHOICE_LIST.index('Doing')
+                task_object.status = STATUS_CHOICE_STR_LIST.index('Doing')
                 task_object.save()
 
 
@@ -79,69 +77,53 @@ def get_series(user):
         }
     }
 
-    for serie_object in Serie.objects.filter(task__assignee=user):
-        task_object = serie_object.task
-        serie_project_task_obect = {
-            'id': 'task_%d' % task_object.id,
-            'name': str(task_object),
-            'milestone': task_object.milestone,
-            'assignee': task_object.assignee.username,
-            'status': task_object.status,
-            'start': convert_datetime_to_timestamp(serie_object.start),
-            'end': convert_datetime_to_timestamp(serie_object.end - timedelta(seconds=1)),
-        }
+    group_objects = user.groups.all().order_by('name')
+    logging.debug('group_objects: %s' % group_objects)
 
-        project_object = serie_object.task.project
+    project_objects = list(Project.objects.filter(group__in=group_objects))
+    project_objects.append(None)
+    logging.debug('project_objects: %s' % project_objects)
 
-        if project_object is not None:
-            if str(project_object.id) not in serie_object_dict:
-                serie_object_dict[str(project_object.id)] = {
-                    'name': project_object.name,
-                    'data': [
-                        {
-                            'id': 'project_%d' % project_object.id,
-                            'name': project_object.name,
-                        }
-                    ],
-                }
+    for project_object in project_objects:
+        logging.debug('project_object: %s' % project_object)
 
-            serie_project_task_obect['parent'] = 'project_%d' % project_object.id,
-            serie_object_dict[str(project_object.id)]['data'].append(serie_project_task_obect)
+        serie_objects = Serie.objects.filter(task__project=project_object)
+        logging.debug('serie_objects: %s' % serie_objects)
 
-        else:
-            serie_object_dict[str(0)]['data'].append(serie_project_task_obect)
-    
-    for serie_object in Serie.objects.filter(task__assignee=None):
-        task_object = serie_object.task
-        serie_project_task_obect = {
-            'id': 'task_%d' % task_object.id,
-            'name': str(task_object),
-            'milestone': task_object.milestone,
-            'assignee': task_object.assignee.username,
-            'status': task_object.status,
-            'start': convert_datetime_to_timestamp(serie_object.start),
-            'end': convert_datetime_to_timestamp(serie_object.end - timedelta(seconds=1)),
-        }
+        for serie_object in serie_objects:
+            task_object = serie_object.task
+            task_object_user = None
+            if task_object.user is not None:
+                task_object_user = task_object.user.username
+            serie_project_task_obect = {
+                'id': 'task_%d' % task_object.id,
+                'name': str(task_object),
+                'milestone': task_object.milestone,
+                'user': task_object_user,
+                'status': task_object.status,
+                'start': convert_datetime_to_timestamp(serie_object.start),
+                'end': convert_datetime_to_timestamp(serie_object.end - timedelta(seconds=1)),
+            }
 
-        project_object = serie_object.task.project
+            project_object = serie_object.task.project
 
-        if project_object is not None:
-            if str(project_object.id) not in serie_object_dict:
-                serie_object_dict[str(project_object.id)] = {
-                    'name': project_object.name,
-                    'data': [
-                        {
-                            'id': 'project_%d' % project_object.id,
-                            'name': project_object.name,
-                        }
-                    ],
-                }
+            if project_object is not None:
+                if str(project_object.id) not in serie_object_dict:
+                    serie_object_dict[str(project_object.id)] = {
+                        'name': project_object.name,
+                        'data': [
+                            {
+                                'id': 'project_%d' % project_object.id,
+                                'name': project_object.name,
+                            }
+                        ],
+                    }
 
-            serie_project_task_obect['parent'] = 'project_%d' % project_object.id,
-            serie_object_dict[str(project_object.id)]['data'].append(serie_project_task_obect)
+                serie_project_task_obect['parent'] = 'project_%d' % project_object.id,
+                serie_object_dict[str(project_object.id)]['data'].append(serie_project_task_obect)
 
-        else:
-            serie_object_dict[str(0)]['data'].append(serie_project_task_obect)
+            else:
+                serie_object_dict[str(0)]['data'].append(serie_project_task_obect)
 
     serie_object_list = []
     for key, value in serie_object_dict.items():
@@ -185,7 +167,13 @@ class IndexView(LoginRequiredMixin, generic.base.TemplateView):
 @login_required
 def accounts_profile(request):
     more_calendars()
-    return render(request, 'main/accounts_profile.html')
+    groups = list(request.user.groups.all().order_by('name'))
+    user_permissions = list(request.user.user_permissions.all())
+    return render(request, 'main/accounts_profile.html', {
+        'user': request.user,
+        'groups': groups,
+        'user_permissions': user_permissions,
+    })
 
 
 def accounts_login(request):
@@ -215,29 +203,77 @@ def accounts_refresh_submit(request):
     return HttpResponseRedirect(reverse('main:index'))
 
 
+def group_list(request):
+    return render(request, 'main/group_list.html', {
+        'queryset_list': request.user.groups.all().order_by('name'),
+    })
+
+
+def group_detail(request, pk):
+    group_object = Group.objects.get(pk=pk)
+    user_objects = group_object.user_set.order_by('username')
+    project_objects = Project.objects.filter(group__pk=pk).order_by('-id')
+
+    return render(request, 'main/group_detail.html', {
+        'user_objects': user_objects,
+        'project_objects': project_objects,
+    })
+
+
+def group_project_create(request, pk):
+    group_object = Group.objects.get(pk=pk)
+    initial = {'group': group_object}
+    project_form = ProjectFrom(initial=initial)
+
+    return render(request, 'main/project_create_or_update.html', {
+        'form': project_form,
+    })
+
+
 class ProjectListView(LoginRequiredMixin, generic.ListView):
     model = Project
     context_object_name = 'queryset_list'
 
     def get_queryset(self):
-        return Project.objects.order_by('id')
+        return Project.objects.order_by('name')
 
 
 class ProjectDetailView(LoginRequiredMixin, generic.DetailView):
     model = Project
     context_object_name = 'project'
 
+    def get_context_data(self, *args, **kwargs):
+        context = {}
 
-class ProjectCreateView(LoginRequiredMixin, generic.CreateView):
-    model = Project
-    fields = ['name']
-    template_name = 'main/create.html'
+        if self.object:
+            project_object = self.object
+            task_objects = Task.objects.filter(project=project_object).order_by('-id')
+            context['task_objects'] = task_objects
+
+        return super().get_context_data(**context)
+
+
+def project_create_or_update_submit(request):
+    group = request.POST.get('group').strip()
+    name = request.POST.get('name').strip()
+
+    group_object = None if group == '' else Group.objects.get(pk=int(group))
+
+    name = 'Untitled' if name == '' else name
+
+    project_object = Project(
+        group = group_object,
+        name = name,
+    )
+    project_object.save()
+
+    return HttpResponseRedirect(reverse('main:project_detail', args=(project_object.pk,)))
 
 
 class ProjectUpdateView(LoginRequiredMixin, generic.UpdateView):
     model = Project
-    fields = ['name']
-    template_name = 'main/update.html'
+    template_name = 'main/create_or_update.html'
+    success_url = reverse_lazy('main:project_detail')
 
 
 class ProjectDeleteView(LoginRequiredMixin, generic.DeleteView):
@@ -246,65 +282,68 @@ class ProjectDeleteView(LoginRequiredMixin, generic.DeleteView):
     success_url = reverse_lazy('main:project_list')
 
 
+def project_task_list(request, pk):
+    project_object = Project.objects.get(pk=pk)
+
+    task_objects = Task.objects.filter(project=project_object).order_by('-id')
+
+    return render(request, 'main/task_list.html', {
+        'task_objects': task_objects,
+    })
+
+
+def project_task_create(request, pk):
+    specified_project_object = Project.objects.get(pk=pk)
+    group_object = specified_project_object.group
+    user_objects = User.objects.filter(groups__name=group_object.name).order_by('username')
+    other_task_objects = Task.objects.filter(project=specified_project_object).order_by('-id')
+
+    return render(request, 'main/task_create_or_update.html', {
+        'specified_project_object': specified_project_object,
+        'priority_choice_tuple_list': PRIORITY_CHOICE_TUPLE_LIST,
+        'user_objects': user_objects,
+        'request_user': request.user,
+        'status_choice_tuple_list': STATUS_CHOICE_TUPLE_LIST,
+        'other_tasks': other_task_objects,
+    })
+
+
 class TaskListView(LoginRequiredMixin, generic.ListView):
     model = Task
     context_object_name = 'queryset_list'
 
     def get_queryset(self):
-        return Task.objects.filter(assignee=self.request.user).order_by('id')
+        queryset = Task.objects.filter(Q(user=self.request.user)|Q(user=None)).order_by('-id')
+        return queryset
 
 
 class TaskDetailView(LoginRequiredMixin, generic.DetailView):
     model = Task
     context_object_name = 'task'
 
-    def get_context_data(self, *args, **kwargs):
-        context = {}
-        if self.object:
-            task_object = self.object
-            task_object.priority = PRIORITY_CHOICE_LIST[task_object.priority]
-            task_object.cost = UNIT * task_object.cost
-            task_object.status = STATUS_CHOICE_LIST[task_object.status]
-            context['task'] = task_object
-        context.update(kwargs)
-        return super().get_context_data(**context)
-
-
-def task_create(request):
-    project_objects = Project.objects.order_by('name')
-
-    other_task_objects = Task.objects.order_by('id')
-
-    return render(request, 'main/task_create_or_update.html', {
-        'projects': project_objects,
-        'priority_choice_list': PRIORITY_CHOICE_LIST,
-        'status_choice_list': STATUS_CHOICE_LIST,
-        'other_tasks': other_task_objects,
-        'user': request.user,
-    })
-
 
 def task_update(request, pk):
     task_object = Task.objects.get(pk=pk)
-
-    project_objects = Project.objects.order_by('name')
-
-    task_object.priority = PRIORITY_CHOICE_LIST[task_object.priority]
-    task_object.status = STATUS_CHOICE_LIST[task_object.status]
 
     task_object.pre_tasks = []
     taskposition_objects = TaskPosition.objects.filter(post=task_object)
     for taskposition_object in taskposition_objects:
         task_object.pre_tasks.append(taskposition_object.pre)
-    other_task_objects = Task.objects.filter(project=task_object.project).order_by('id')
+
+    project_objects = Project.objects.order_by('name')
+
+    user_objects = User.objects.order_by('username')
+
+    other_task_objects = Task.objects.filter(project=task_object.project).order_by('-id')
     
     return render(request, 'main/task_create_or_update.html', {
         'task': task_object,
-        'projects': project_objects,
-        'priority_choice_list': PRIORITY_CHOICE_LIST,
-        'status_choice_list': STATUS_CHOICE_LIST,
+        'project_objects': project_objects,
+        'priority_choice_tuple_list': PRIORITY_CHOICE_TUPLE_LIST,
+        'user_objects': user_objects,
+        'request_user': request.user,
+        'status_choice_tuple_list': STATUS_CHOICE_TUPLE_LIST,
         'other_tasks': other_task_objects,
-        'user': request.user,
     })
 
 
@@ -319,7 +358,7 @@ def task_create_or_update_submit(request):
     cost = request.POST.get('cost').strip()
     start = request.POST.get('start').strip()
     deadline = request.POST.get('deadline').strip()
-    assignee = request.POST.get('assignee').strip()
+    user = request.POST.get('user').strip()
     status = request.POST.get('status').strip()
     
     if id == '':
@@ -327,27 +366,26 @@ def task_create_or_update_submit(request):
     else:
         id = int(id)
 
-    if project == '':
-        project = None
-    else:
-        project = Project.objects.get(name=project)
+    project_object = None
+    if project != '':
+        project_object = Project.objects.get(pk=int(project))
 
-    # title
+    title = 'Untitled' if title == '' else title
     
-    # description
+    description = None if description == '' else description
     
     reference = None if reference == '' else reference
 
     milestone = True if milestone == 'on' else False
 
-    priority = PRIORITY_CHOICE_LIST.index(priority)
+    priority = 0 if priority == '' else int(priority)
 
     cost = 0 if cost == '' else int(cost)
     if milestone:
         cost = 0
 
     start_datetime = None
-    if start != '':
+    if start != '' and start != '--------------':
         m0 = re.match('([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]+)/%d' % RESOLUTION, start)
         if m0:
             start_datetime = datetime(
@@ -363,7 +401,7 @@ def task_create_or_update_submit(request):
                 start_datetime = convert_timestr_yyyy_mm_dd_to_datetime(start)
 
     deadline_datetime = None
-    if deadline != '':
+    if deadline != '' and start != '--------------':
         m0 = re.match('([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]+)/%d' % RESOLUTION, deadline)
         if m0:
             deadline_datetime = datetime(
@@ -378,15 +416,15 @@ def task_create_or_update_submit(request):
             if m1:
                 deadline_datetime = convert_timestr_yyyy_mm_dd_to_datetime(deadline)
 
-    assignee = None if assignee == '' else User.objects.get(username=assignee)
+    user_object = None if user == '' else User.objects.get(pk=int(user))
 
-    status = STATUS_CHOICE_LIST.index(status)
+    status = 0 if status == '' else int(status)
 
     try:
         task_object = Task.objects.get(pk=id)
     except Task.DoesNotExist:
         task_object = Task(
-            project = project,
+            project = project_object,
             title = title,
             description = description,
             reference = reference,
@@ -395,11 +433,11 @@ def task_create_or_update_submit(request):
             cost = cost,
             start = start_datetime,
             deadline = deadline_datetime,
-            assignee = assignee,
+            user = user_object,
             status = status,
         )
     else:
-        task_object.project = project
+        task_object.project = project_object
         task_object.title = title
         task_object.description = description
         task_object.reference = reference
@@ -408,7 +446,7 @@ def task_create_or_update_submit(request):
         task_object.cost = cost
         task_object.start = start_datetime
         task_object.deadline = deadline_datetime
-        task_object.assignee = assignee
+        task_object.user = user_object
         task_object.status = status
 
     task_object.save()
@@ -429,7 +467,13 @@ def task_create_or_update_submit(request):
             taskposition_object.save()
         i = i + 1
 
-    refresh_serie_objects(request.user)
+    if project_object is None:
+        refresh_serie_objects(request.user)
+    else:
+        group_object = project_object.group
+        user_objects = group_object.user_set.order_by('username')
+        for user in user_objects:
+            refresh_serie_objects(user)
 
     return HttpResponseRedirect(reverse('main:task_detail', args=(task_object.pk,)))
 
@@ -446,8 +490,10 @@ class TaskPositionListView(LoginRequiredMixin, generic.ListView):
 
     def get_queryset(self):
         pks = []
-        for taskposition_object in TaskPosition.objects.all():
-            if taskposition_object.pre.assignee == self.request.user or taskposition_object.post.assignee == self.request.user:
+        groups = list(self.request.user.groups.all().order_by('name'))
+        for taskposition_object in TaskPosition.objects.all().order_by('-id'):
+            if taskposition_object.pre.project.group in groups \
+                    or taskposition_object.post.project.group in groups:
                 pks.append(taskposition_object.pk)
         return TaskPosition.objects.filter(pk__in=pks)
 
@@ -511,7 +557,7 @@ class AlgorithmListView(LoginRequiredMixin, generic.ListView):
     context_object_name = 'queryset_list'
 
     def get_queryset(self):
-        return Algorithm.objects.filter(user=self.request.user).all()
+        return Algorithm.objects.filter(user=self.request.user)
 
 
 class AlgorithmDetailView(LoginRequiredMixin, generic.DetailView):

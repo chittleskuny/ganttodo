@@ -1,15 +1,12 @@
 {% extends "main/base.html" %}
 {% block body %}
-    <div id="toolbar">
-        <div class="toolbar-item">
-            <a href="../create"><button>Create</button></a>
-        </div>
-    </div>
     {% if queryset_list %}
         <div class="queryset-list">
             <ul>
-                {% for taskposition in queryset_list %}
-                    <li><a href="{{ taskposition.get_absolute_url }}">{{ taskposition }}</a></li>
+                {% for group in queryset_list %}
+                    <li>
+                        <a href="/group/{{ group.pk }}">{{ group }}</a>
+                    </li>
                 {% endfor %}
             </ul>
         </div>
